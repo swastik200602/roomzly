@@ -9,6 +9,6 @@ const server = createServer(app);
 
 createSocketServer(server);
 
-server.listen(env.PORT, () => {
-  logger.info({ port: env.PORT }, "Roomzly backend listening");
+server.listen(env.PORT, "0.0.0.0", () => {
+  logger.info({ host: "0.0.0.0", port: env.PORT }, "Roomzly backend listening");
 });
