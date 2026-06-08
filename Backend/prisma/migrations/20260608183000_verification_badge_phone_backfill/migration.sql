@@ -9,7 +9,7 @@ ranked AS (
   SELECT
     id,
     normalized_phone,
-    row_number() OVER (PARTITION BY normalized_phone ORDER BY "createdAt", id) AS rn
+    row_number() OVER (PARTITION BY normalized_phone ORDER BY id) AS rn
   FROM normalized
   WHERE normalized_phone IS NOT NULL
 )
