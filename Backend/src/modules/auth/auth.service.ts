@@ -100,7 +100,10 @@ export const authService = {
     if (existing) throw conflict("Email is already registered");
     const phoneNumber = input.phoneNumber ? normalizePhoneNumber(input.phoneNumber) : null;
     if (phoneNumber) {
-      const existingPhone = await prisma.user.findUnique({ where: { phoneNumber } });
+      const existingPhone = await prisma.user.findFirst({
+        where: { OR: [{ phoneNumber }, { phone: phoneNumber }] },
+        select: { id: true }
+      });
       if (existingPhone) throw conflict("Phone number is already registered");
     }
 
@@ -166,8 +169,7 @@ export const authService = {
           data: {
             firstName: names.firstName,
             lastName: names.lastName,
-            avatarUrl: payload.picture ?? account.user.avatarUrl,
-            verified: true
+            avatarUrl: payload.picture ?? account.user.avatarUrl
           }
         });
       }
@@ -187,8 +189,7 @@ export const authService = {
         return tx.user.update({
           where: { id: existingUser.id },
           data: {
-            avatarUrl: existingUser.avatarUrl ?? payload.picture,
-            verified: true
+            avatarUrl: existingUser.avatarUrl ?? payload.picture
           }
         });
       }
@@ -201,7 +202,6 @@ export const authService = {
           passwordHash: null,
           role,
           avatarUrl: payload.picture,
-          verified: true,
           accounts: {
             create: {
               provider: AuthProvider.GOOGLE,
@@ -303,8 +303,8 @@ export const authService = {
     const phoneNumber = normalizePhoneNumber(inputPhoneNumber);
     const existing = await prisma.user.findFirst({
       where: {
-        phoneNumber,
-        id: { not: userId }
+        id: { not: userId },
+        OR: [{ phoneNumber }, { phone: phoneNumber }]
       },
       select: { id: true }
     });

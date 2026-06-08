@@ -33,6 +33,20 @@ export const errorMiddleware: ErrorRequestHandler = (error, _req, res, _next) =>
   }
 
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2002") {
+      const targets = Array.isArray(error.meta?.target) ? error.meta.target.map(String) : [];
+      const isPhoneConflict = targets.includes("phoneNumber") || targets.includes("phone");
+      res.status(409).json({
+        success: false,
+        error: {
+          code: "CONFLICT",
+          message: isPhoneConflict ? "Phone number is already used on another account" : "A record with this value already exists",
+          details: isProduction ? undefined : { code: error.code, meta: error.meta }
+        }
+      });
+      return;
+    }
+
     res.status(400).json({
       success: false,
       error: {

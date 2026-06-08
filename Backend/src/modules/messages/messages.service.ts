@@ -3,7 +3,7 @@ import { badRequest, forbidden, notFound } from "@/lib/app-error.js";
 import { prisma } from "@/lib/prisma.js";
 import { notificationService } from "@/modules/notifications/notifications.service.js";
 import { uploadService } from "@/modules/uploads/uploads.service.js";
-import { emitToThread, emitToUser } from "@/socket/socket.js";
+import { emitToThread, emitToUser, emitToUserExceptThread } from "@/socket/socket.js";
 
 async function assertParticipant(threadId: string, userId: string): Promise<void> {
   const participant = await prisma.threadParticipant.findUnique({
@@ -195,6 +195,7 @@ export const messageService = {
       )
     );
     recipients.forEach((recipient) => {
+      emitToUserExceptThread(recipient.userId, threadId, "new_message", safeMessage);
       emitToUser(recipient.userId, "unread_count_changed", { threadId });
     });
     return safeMessage;

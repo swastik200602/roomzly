@@ -1,7 +1,9 @@
 import { NotificationType, Prisma, UserRole, VerificationStatus, type User, type VerificationDocument } from "@prisma/client";
 import { prisma } from "@/lib/prisma.js";
+import { conflict } from "@/lib/app-error.js";
 import { uploadService } from "@/modules/uploads/uploads.service.js";
 import { notificationService } from "@/modules/notifications/notifications.service.js";
+import { emitToUser } from "@/socket/socket.js";
 import type {
   AdminVerificationQueryInput,
   ReviewVerificationDocumentInput,
@@ -30,14 +32,28 @@ function verificationBody(status: VerificationStatus): string {
   return "Your identity document is waiting for review.";
 }
 
+function normalizePhone(phone: string): string {
+  return phone.replace(/[^\d+]/g, "");
+}
+
 export const userService = {
   async updateProfile(userId: string, input: UpdateProfileInput) {
     const current = await prisma.user.findUniqueOrThrow({
       where: { id: userId },
       select: { phoneNumber: true, phone: true, phoneVerified: true }
     });
-    const nextPhone = input.phone?.replace(/[^\d+]/g, "");
+    const nextPhone = input.phone !== undefined ? normalizePhone(input.phone) : undefined;
     const samePhone = current.phoneNumber === nextPhone || current.phone === nextPhone;
+    if (nextPhone) {
+      const duplicate = await prisma.user.findFirst({
+        where: {
+          id: { not: userId },
+          OR: [{ phoneNumber: nextPhone }, { phone: nextPhone }]
+        },
+        select: { id: true }
+      });
+      if (duplicate) throw conflict("Phone number is already used on another account");
+    }
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
@@ -162,21 +178,27 @@ export const userService = {
           status: VerificationStatus.VERIFIED
         }
       });
-      await tx.user.update({
+      const user = await tx.user.update({
         where: { id: document.userId },
-        data: { verified: verifiedCount > 0 }
+        data: { verified: verifiedCount > 0 },
+        select: { verified: true }
       });
-      return document;
+      return { document, userVerified: user.verified };
     });
 
     await notificationService.create({
-      userId: result.userId,
+      userId: result.document.userId,
       type: NotificationType.VERIFICATION,
       title: "Verification status updated",
-      body: verificationBody(result.status),
-      metadata: { documentId: result.id, status: result.status }
+      body: verificationBody(result.document.status),
+      metadata: { documentId: result.document.id, status: result.document.status }
+    });
+    emitToUser(result.document.userId, "verification_status_changed", {
+      documentId: result.document.id,
+      status: result.document.status,
+      verified: result.userVerified
     });
 
-    return sanitizeDocument(result);
+    return sanitizeDocument(result.document);
   },
 };

@@ -70,6 +70,10 @@ export function emitToUser(userId: string, event: string, payload: unknown): voi
   io?.to(`user:${userId}`).emit(event, payload);
 }
 
+export function emitToUserExceptThread(userId: string, threadId: string, event: string, payload: unknown): void {
+  io?.to(`user:${userId}`).except(`thread:${threadId}`).emit(event, payload);
+}
+
 export function emitToThread(threadId: string, event: string, payload: unknown): void {
   io?.to(`thread:${threadId}`).emit(event, payload);
 }

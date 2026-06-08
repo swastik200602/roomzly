@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma.js";
 import { adminAuditService, type AuditRequestContext } from "@/modules/admin/admin-audit.service.js";
 import { notificationService } from "@/modules/notifications/notifications.service.js";
 import { uploadService } from "@/modules/uploads/uploads.service.js";
+import { emitToUser } from "@/socket/socket.js";
 import type {
   AdminAuditLogQueryInput,
   AdminBookingQueryInput,
@@ -136,6 +137,14 @@ export const adminService = {
     if (target.role === UserRole.ADMIN && input.role) {
       throw forbidden("Admin role changes are not allowed from this panel");
     }
+    if (input.verified === true) {
+      const approvedDocuments = await prisma.verificationDocument.count({
+        where: { userId, status: VerificationStatus.VERIFIED }
+      });
+      if (approvedDocuments === 0) {
+        throw badRequest("Identity badge can only be assigned by approving a verification document");
+      }
+    }
 
     const updated = await prisma.user.update({
       where: { id: userId },
@@ -164,6 +173,13 @@ export const adminService = {
       previousState: target,
       newState: { active: updated.active, verified: updated.verified, phoneVerified: updated.phoneVerified, role: updated.role }
     });
+    if (input.verified !== undefined || input.phoneVerified !== undefined) {
+      emitToUser(userId, "verification_status_changed", {
+        verified: updated.verified,
+        phoneVerified: updated.phoneVerified,
+        phoneVerifiedAt: updated.phoneVerifiedAt
+      });
+    }
     return updated;
   },
 
@@ -381,11 +397,12 @@ export const adminService = {
       const verifiedCount = await tx.verificationDocument.count({
         where: { userId: document.userId, status: VerificationStatus.VERIFIED }
       });
-      await tx.user.update({
+      const user = await tx.user.update({
         where: { id: document.userId },
-        data: { verified: verifiedCount > 0 || input.status === VerificationStatus.VERIFIED }
+        data: { verified: verifiedCount > 0 || input.status === VerificationStatus.VERIFIED },
+        select: { verified: true }
       });
-      return document;
+      return { ...document, userVerified: user.verified };
     });
     const action =
       input.status === VerificationStatus.VERIFIED
@@ -411,6 +428,11 @@ export const adminService = {
           ? "Your owner identity has been approved."
           : updated.rejectionReason ?? `Your verification status is ${updated.status.toLowerCase().replaceAll("_", " ")}.`,
       metadata: { documentId, status: updated.status }
+    });
+    emitToUser(updated.userId, "verification_status_changed", {
+      documentId,
+      status: updated.status,
+      verified: updated.userVerified
     });
     return updated;
   },
@@ -448,11 +470,12 @@ export const adminService = {
       const verifiedCount = await tx.propertyVerificationDocument.count({
         where: { propertyId: document.propertyId, status: VerificationStatus.VERIFIED }
       });
-      await tx.property.update({
+      const property = await tx.property.update({
         where: { id: document.propertyId },
-        data: { verified: verifiedCount > 0 || input.status === VerificationStatus.VERIFIED }
+        data: { verified: verifiedCount > 0 || input.status === VerificationStatus.VERIFIED },
+        select: { verified: true }
       });
-      return document;
+      return { ...document, propertyVerified: property.verified };
     });
     const action =
       input.status === VerificationStatus.VERIFIED
@@ -478,6 +501,12 @@ export const adminService = {
           ? `${updated.property.title} has been verified.`
           : updated.rejectionReason ?? `${updated.property.title} verification is ${updated.status.toLowerCase().replaceAll("_", " ")}.`,
       metadata: { documentId, propertyId: updated.propertyId, status: updated.status }
+    });
+    emitToUser(updated.property.owner.id, "property_verification_status_changed", {
+      documentId,
+      propertyId: updated.propertyId,
+      status: updated.status,
+      verified: updated.propertyVerified
     });
     return { ...updated, fileUrl: uploadService.signedUrl(updated.publicId) };
   },
