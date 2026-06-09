@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Roomzly - Verified homes, PGs, and rentals</title>
+  <desc id="desc">Roomzly social preview image.</desc>
+  <rect width="1200" height="630" fill="#080a0c"/>
+  <rect x="70" y="70" width="1060" height="490" fill="#111418" stroke="#2a2f35" stroke-width="2"/>
+  <circle cx="998" cy="166" r="54" fill="#c9ff52"/>
+  <rect x="122" y="124" width="154" height="14" fill="#c9ff52"/>
+  <text x="120" y="236" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="86" font-weight="800" letter-spacing="-3">
+    ROOMZLY
+  </text>
+  <text x="124" y="300" fill="#a7adb5" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="500">
+    Verified homes, PGs, apartments, villas, and rentals.
+  </text>
+  <g fill="none" stroke="#f8fafc" stroke-width="3" opacity="0.85">
+    <path d="M124 408h176v104H124z"/>
+    <path d="M154 408v-52h116v52"/>
+    <path d="M206 512v-56h28v56"/>
+  </g>
+  <g fill="none" stroke="#c9ff52" stroke-width="3">
+    <path d="M378 384h266v128H378z"/>
+    <path d="M418 512v-76h74v76"/>
+    <path d="M526 512v-76h74v76"/>
+    <path d="M378 424h266"/>
+  </g>
+  <text x="770" y="432" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">
+    Search. Verify. Contact.
+  </text>
+  <text x="770" y="478" fill="#a7adb5" font-family="Inter, Arial, sans-serif" font-size="23">
+    roomzly.in
+  </text>
+</svg>
