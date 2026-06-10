@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { authApi, type UserRole } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/stores/auth";
+import { usePremiumLoading } from "@/stores/loading";
+import { RoomzlyActionMark } from "@/components/ui/action-feedback";
 
 declare global {
   interface Window {
@@ -51,7 +53,11 @@ export function GoogleAuthButton({ role = "RESIDENT" }: { role?: UserRole }) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const setSession = useAuth((s) => s.setSession);
+  const showPremiumLoading = usePremiumLoading((s) => s.show);
+  const hidePremiumLoading = usePremiumLoading((s) => s.hideAfterMinimum);
   const [available, setAvailable] = useState(true);
+  const [ready, setReady] = useState(false);
+  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,13 +78,18 @@ export function GoogleAuthButton({ role = "RESIDENT" }: { role?: UserRole }) {
               toast.error("Google did not return a credential");
               return;
             }
+            setPending(true);
+            showPremiumLoading("Verifying your Google sign-in...");
             try {
               const session = await authApi.google({ credential, role });
               setSession(session);
               toast.success("Signed in with Google");
               navigate({ to: "/dashboard" });
+              hidePremiumLoading();
             } catch (error) {
               toast.error(error instanceof ApiError ? error.message : "Google sign-in failed");
+              setPending(false);
+              hidePremiumLoading();
             }
           },
         });
@@ -90,6 +101,7 @@ export function GoogleAuthButton({ role = "RESIDENT" }: { role?: UserRole }) {
           width: mountRef.current.clientWidth || 320,
           text: "continue_with",
         });
+        setReady(true);
       } catch {
         if (!cancelled) setAvailable(false);
       }
@@ -113,5 +125,15 @@ export function GoogleAuthButton({ role = "RESIDENT" }: { role?: UserRole }) {
     );
   }
 
-  return <div ref={mountRef} className="w-full [&>div]:mx-auto" />;
+  return (
+    <div className="relative min-h-11">
+      {(!ready || pending) && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center gap-2 rounded-sm border border-white/10 bg-neutral-950 text-sm font-semibold text-white light:border-neutral-200 light:bg-white light:text-neutral-950">
+          <RoomzlyActionMark />
+          {pending ? "Opening Roomzly" : "Preparing Google sign-in"}
+        </div>
+      )}
+      <div ref={mountRef} className="w-full [&>div]:mx-auto" />
+    </div>
+  );
 }

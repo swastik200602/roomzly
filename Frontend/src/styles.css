@@ -3,6 +3,7 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant light (&:is(.light *));
 
 /* Roomzly — Obsidian Architectural design system.
  * Dark brutalist. Heavy borders. Mono accents. Editorial type hierarchy.
@@ -141,9 +142,37 @@
   to   { opacity: 1; }
 }
 
+@keyframes rz-shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes rz-scan {
+  0%, 100% { transform: scale(0.72); opacity: 0.35; }
+  50% { transform: scale(1); opacity: 0.95; }
+}
+
 @layer utilities {
   .animate-fade-up { animation: rz-fade-up 0.7s var(--ease-expo) both; }
   .animate-fade-in { animation: rz-fade-in 0.5s var(--ease-expo) both; }
+  .roomzly-shimmer {
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(110deg, transparent 0%, color-mix(in oklch, var(--color-accent) 14%, transparent) 45%, transparent 75%),
+      color-mix(in oklch, var(--color-foreground) 8%, transparent);
+  }
+  .roomzly-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, color-mix(in oklch, var(--color-foreground) 16%, transparent), transparent);
+    animation: rz-shimmer 1.65s var(--ease-expo) infinite;
+  }
+  .roomzly-scan-ring {
+    animation: rz-scan 1.7s var(--ease-expo) infinite;
+  }
   .font-display { font-family: var(--font-display); }
   .font-mono    { font-family: var(--font-mono); }
   .text-mono-eyebrow {

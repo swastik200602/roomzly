@@ -10,7 +10,9 @@ import p5 from "@/assets/property-5.jpg";
 import { authApi, type UserRole } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/stores/auth";
+import { usePremiumLoading } from "@/stores/loading";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
+import { ActionButtonContent } from "@/components/ui/action-feedback";
 
 export const Route = createFileRoute("/auth/signup")({
   head: () => ({ meta: [{ title: "Create an account — Roomzly" }] }),
@@ -20,16 +22,23 @@ export const Route = createFileRoute("/auth/signup")({
 function SignupPage() {
   const navigate = useNavigate();
   const setSession = useAuth((s) => s.setSession);
+  const showPremiumLoading = usePremiumLoading((s) => s.show);
+  const hidePremiumLoading = usePremiumLoading((s) => s.hideAfterMinimum);
   const [role, setRole] = useState<UserRole>("RESIDENT");
   const signupMutation = useMutation({
     mutationFn: authApi.register,
+    onMutate: () => {
+      showPremiumLoading("Building your Roomzly profile...");
+    },
     onSuccess: (session) => {
       setSession(session);
       toast.success(session.user.role === "OWNER" ? "Account created. Verify your mobile number before listing." : "Account created");
       navigate({ to: session.user.role === "OWNER" ? "/dashboard/settings" : "/dashboard" });
+      hidePremiumLoading();
     },
     onError: (error) => {
       toast.error(error instanceof ApiError ? error.message : "Account creation failed");
+      hidePremiumLoading();
     },
   });
 
@@ -215,8 +224,12 @@ function SignupPage() {
               disabled={signupMutation.isPending}
               className="w-full bg-accent text-accent-foreground py-3 text-sm font-bold uppercase tracking-widest rounded-sm hover:bg-accent/90 transition-all mt-1 inline-flex items-center justify-center gap-2 group"
             >
-              {signupMutation.isPending ? "Creating..." : "Create account"}
-              <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
+              <ActionButtonContent
+                pending={signupMutation.isPending}
+                idleLabel="Create account"
+                pendingLabel="Building your space"
+                icon={<ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />}
+              />
             </button>
           </form>
 

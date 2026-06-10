@@ -35,9 +35,17 @@ export function Navbar() {
           {/* Logo */}
           <Link
             to="/"
-            className="font-display text-xl tracking-tighter font-bold uppercase hover:text-accent transition-colors shrink-0"
+            className="inline-flex items-center gap-2.5 font-display text-xl tracking-tighter font-bold uppercase hover:text-accent transition-colors shrink-0"
           >
-            Roomzly
+            <img
+              src="/favicon-512.png"
+              alt=""
+              className="size-8 rounded-md object-contain"
+              width={32}
+              height={32}
+              loading="eager"
+            />
+            <span>Roomzly</span>
           </Link>
 
           {/* Desktop nav links */}

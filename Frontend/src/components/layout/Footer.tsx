@@ -4,7 +4,17 @@ const COLS = [
   {
     title: "Discover",
     links: [
+      { to: "/rooms-in-dehradun", label: "Rooms in Dehradun" },
+      { to: "/pg-in-dehradun", label: "PG in Dehradun" },
+      { to: "/pg-in-prem-nagar", label: "PG in Prem Nagar" },
+      { to: "/flats-in-dehradun", label: "Flats in Dehradun" },
       { to: "/search-map", label: "Search Map" },
+      { to: "/properties-in-uttarakhand", label: "Properties in Uttarakhand" },
+    ],
+  },
+  {
+    title: "Trust",
+    links: [
       { to: "/verified-owners", label: "Verified Owners" },
       { to: "/premium-homes", label: "Premium Homes" },
       { to: "/pg-hostels", label: "PG / Hostels" },
@@ -36,14 +46,14 @@ export function Footer() {
 
   return (
     <footer className="border-t border-border py-16 mt-16 sm:py-20 sm:mt-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 sm:gap-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8 sm:gap-12">
         <div className="col-span-2 sm:col-span-3 md:col-span-2">
           <span className="font-display text-2xl font-bold tracking-tighter uppercase mb-4 block">
             Roomzly
           </span>
           <p className="text-muted-foreground text-sm max-w-xs leading-relaxed">
-            Defining the next standard in premium real estate discovery. Built for the
-            modern nomad and the discerning owner.
+            Find rooms, PGs, flats, hostels, and rental properties with verified owner contact,
+            private chat, photos, and booking tools.
           </p>
         </div>
         {COLS.map((c) => (

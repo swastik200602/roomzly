@@ -37,6 +37,9 @@ import { Suspense, lazy, useState } from "react";
 import { toast } from "sonner";
 
 import { PropertyCard } from "@/components/property/PropertyCard";
+import { ListingDetailSkeleton } from "@/components/property/ListingDetailSkeleton";
+import { ProgressiveImage } from "@/components/property/ProgressiveImage";
+import { RoomzlyErrorState } from "@/components/ui/premium-states";
 import { propertiesApi } from "@/lib/api/properties";
 import { bookingsApi } from "@/lib/api/bookings";
 import { messagesApi } from "@/lib/api/messages";
@@ -46,11 +49,13 @@ import { ApiError } from "@/lib/api/client";
 import { useWishlist } from "@/stores/wishlist";
 import { useCompare } from "@/stores/compare";
 import { useAuth } from "@/stores/auth";
+import { usePremiumLoading } from "@/stores/loading";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { ActionButtonContent, RoomzlyActionMark } from "@/components/ui/action-feedback";
 import { formatCurrency } from "@/lib/currency";
 
 export const Route = createFileRoute("/listing/$slug")({
@@ -126,6 +131,8 @@ function ListingPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const user = useAuth((state) => state.user);
+  const showPremiumLoading = usePremiumLoading((s) => s.show);
+  const hidePremiumLoading = usePremiumLoading((s) => s.hideAfterMinimum);
   const propertyQuery = useQuery({
     queryKey: ["property", slug],
     queryFn: () => propertiesApi.detail(slug),
@@ -170,12 +177,17 @@ function ListingPage() {
         moveInDate: checkIn.toISOString(),
       });
     },
+    onMutate: () => {
+      showPremiumLoading("Sending your booking request...");
+    },
     onSuccess: () => {
       toast.success("Booking request sent");
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      hidePremiumLoading();
     },
     onError: (error) => {
       toast.error(error instanceof ApiError || error instanceof Error ? error.message : "Could not request booking");
+      hidePremiumLoading();
     },
   });
 
@@ -184,13 +196,18 @@ function ListingPage() {
       if (!p) throw new Error("Property not loaded");
       return messagesApi.createThread({ propertyId: p.id });
     },
+    onMutate: () => {
+      showPremiumLoading("Opening private Roomzly chat...");
+    },
     onSuccess: (thread) => {
       toast.success("Private chat opened");
       queryClient.invalidateQueries({ queryKey: ["message-threads"] });
       navigate({ to: "/dashboard/messages", search: { threadId: thread.id } });
+      hidePremiumLoading();
     },
     onError: (error) => {
       toast.error(error instanceof ApiError || error instanceof Error ? error.message : "Could not open chat");
+      hidePremiumLoading();
     },
   });
 
@@ -239,20 +256,22 @@ function ListingPage() {
   };
 
   if (propertyQuery.isLoading) {
-    return (
-      <div className="min-h-dvh grid place-items-center">
-        <p className="text-mono-eyebrow">Loading listing</p>
-      </div>
-    );
+    return <ListingDetailSkeleton />;
   }
 
   if (propertyQuery.isError || !p) {
     return (
-      <div className="min-h-dvh grid place-items-center text-center px-6">
-        <div>
-          <p className="text-mono-eyebrow mb-3">Listing unavailable</p>
-          <h1 className="font-display text-4xl mb-6">This listing could not be loaded</h1>
-          <Link to="/explore" className="bg-foreground text-background px-5 py-2.5 text-sm font-semibold rounded-sm inline-flex items-center gap-2">
+      <div className="min-h-dvh px-6 py-16">
+        <RoomzlyErrorState
+          className="mx-auto max-w-2xl"
+          eyebrow="Listing unavailable"
+          title="This listing could not be loaded"
+          description="The property may have moved, expired, or the network may be slow. Try again or continue exploring verified spaces."
+          actionLabel="Try again"
+          onAction={() => propertyQuery.refetch()}
+        />
+        <div className="mt-5 text-center">
+          <Link to="/explore" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground">
             <ArrowLeft className="size-4" /> Back to explore
           </Link>
         </div>
@@ -423,8 +442,12 @@ function ListingPage() {
             disabled={threadMutation.isPending}
             className="min-h-11 rounded-sm bg-foreground px-4 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50 inline-flex items-center justify-center gap-2"
           >
-            <MessageCircle className="size-4" />
-            {threadMutation.isPending ? "Opening" : "Chat on Roomzly"}
+            <ActionButtonContent
+              pending={threadMutation.isPending}
+              idleLabel="Chat on Roomzly"
+              pendingLabel="Opening private chat"
+              icon={<MessageCircle className="size-4" />}
+            />
           </button>
           {whatsappContactUrl && (
             <a
@@ -469,11 +492,12 @@ function ListingPage() {
                   className="relative min-w-full aspect-[4/3] snap-center bg-black"
                   aria-label={`Open image ${index + 1} of ${gallery.length}`}
                 >
-                  <img
+                  <ProgressiveImage
                     src={image}
                     alt={`${p.title} image ${index + 1} of ${gallery.length}`}
                     loading={index === 0 ? "eager" : "lazy"}
-                    className="size-full object-contain"
+                    wrapperClassName="size-full"
+                    className="object-contain"
                   />
                 </button>
               ))}
@@ -508,11 +532,12 @@ function ListingPage() {
                 )}
                 aria-label={`Open image ${index + 1} of ${gallery.length}`}
               >
-                <img
+                <ProgressiveImage
                   src={image}
                   alt={`${p.title} image ${index + 1} of ${gallery.length}`}
                   loading={index < 2 ? "eager" : "lazy"}
-                  className="size-full object-contain transition-opacity duration-300"
+                  wrapperClassName="size-full"
+                  className="object-contain"
                 />
                 <span className="absolute right-3 top-3 bg-black/70 text-white px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest">
                   {index + 1}/{gallery.length}
@@ -528,14 +553,20 @@ function ListingPage() {
               className="relative col-span-2 row-span-2 border border-border overflow-hidden"
               aria-label={`Open image 1 of ${gallery.length}`}
             >
-              <motion.img
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6 }}
-                src={gallery[0]}
-                alt={p.title}
-                className="w-full h-full object-cover"
-              />
+                className="size-full"
+              >
+                <ProgressiveImage
+                  src={gallery[0]}
+                  alt={p.title}
+                  loading="eager"
+                  wrapperClassName="size-full"
+                  className="object-cover"
+                />
+              </motion.div>
               <span className="absolute right-3 top-3 bg-black/70 text-white px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest">
                 1/{gallery.length}
               </span>
@@ -548,11 +579,12 @@ function ListingPage() {
                 className="relative border border-border overflow-hidden"
                 aria-label={`Open image ${index + 2} of ${gallery.length}`}
               >
-                <img
+                <ProgressiveImage
                   src={g}
                   alt={`${p.title} image ${index + 2} of ${gallery.length}`}
                   loading="lazy"
-                  className="w-full h-full object-cover"
+                  wrapperClassName="size-full"
+                  className="object-cover"
                 />
                 {index === 3 && gallery.length > 5 && (
                   <span className="absolute inset-0 bg-black/55 text-white grid place-items-center text-sm font-mono uppercase tracking-widest">
@@ -660,7 +692,11 @@ function ListingPage() {
                 disabled={reportMutation.isPending}
                 className="bg-foreground text-background px-4 py-2.5 rounded-sm font-mono text-[10px] uppercase tracking-widest font-bold disabled:opacity-50"
               >
-                {reportMutation.isPending ? "Submitting" : "Submit report"}
+                <ActionButtonContent
+                  pending={reportMutation.isPending}
+                  idleLabel="Submit report"
+                  pendingLabel="Submitting"
+                />
               </button>
             </div>
           </form>
@@ -869,7 +905,11 @@ function ListingPage() {
                       disabled={reviewMutation.isPending}
                       className="bg-foreground text-background px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-sm disabled:opacity-50"
                     >
-                      {reviewMutation.isPending ? "Saving" : "Submit review"}
+                      <ActionButtonContent
+                        pending={reviewMutation.isPending}
+                        idleLabel="Submit review"
+                        pendingLabel="Saving"
+                      />
                     </button>
                   </form>
                 )}
@@ -922,7 +962,11 @@ function ListingPage() {
                   disabled={bookingMutation.isPending}
                   className="w-full min-h-12 bg-accent text-accent-foreground px-5 py-3 text-sm font-bold uppercase tracking-widest rounded-sm hover:bg-accent/90 transition-colors disabled:opacity-50"
                 >
-                  {bookingMutation.isPending ? "Requesting" : "Book Now"}
+                  <ActionButtonContent
+                    pending={bookingMutation.isPending}
+                    idleLabel="Book Now"
+                    pendingLabel="Sending request"
+                  />
                 </button>
                 <p className="text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
                   No charge until booking is confirmed
@@ -979,8 +1023,12 @@ function ListingPage() {
                   disabled={threadMutation.isPending}
                   className="w-full min-h-12 border border-border bg-background py-3 text-sm font-semibold rounded-sm hover:bg-surface-hi transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
                 >
-                  <MessageCircle className="size-4" />
-                  {threadMutation.isPending ? "Opening" : "Private Roomzly chat"}
+                  <ActionButtonContent
+                    pending={threadMutation.isPending}
+                    idleLabel="Private Roomzly chat"
+                    pendingLabel="Opening private chat"
+                    icon={<MessageCircle className="size-4" />}
+                  />
                 </button>
                 <p className="text-xs leading-relaxed text-muted-foreground">
                   Use Roomzly chat when you want privacy, saved history, and platform visibility before sharing your number.
@@ -1067,14 +1115,18 @@ function ListingPage() {
             aria-label="Chat on Roomzly"
             className="size-10 border border-border rounded-sm hover:bg-surface-hi transition-colors disabled:opacity-50 grid place-items-center"
           >
-            <MessageCircle className="size-4" />
+            {threadMutation.isPending ? <RoomzlyActionMark className="size-4" /> : <MessageCircle className="size-4" />}
           </button>
           <button
             onClick={requestBooking}
             disabled={bookingMutation.isPending}
             className="bg-accent text-accent-foreground px-4 py-2.5 text-sm font-bold rounded-sm hover:bg-accent/90 transition-colors disabled:opacity-50"
           >
-            {bookingMutation.isPending ? "Booking" : "Book Now"}
+            <ActionButtonContent
+              pending={bookingMutation.isPending}
+              idleLabel="Book Now"
+              pendingLabel="Booking"
+            />
           </button>
         </div>
       </div>

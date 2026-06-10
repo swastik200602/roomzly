@@ -115,6 +115,30 @@ export function MarketplaceDiscoveryPage({
         </div>
       </section>
 
+      <section className="border-b border-border bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-mono-eyebrow mr-2">Popular searches</span>
+            {[
+              { to: "/rooms-in-dehradun", label: "Rooms in Dehradun" },
+              { to: "/pg-in-dehradun", label: "PG in Dehradun" },
+              { to: "/pg-in-prem-nagar", label: "PG in Prem Nagar" },
+              { to: "/flats-in-dehradun", label: "Flats in Dehradun" },
+              { to: "/properties-in-uttarakhand", label: "Properties in Uttarakhand" },
+            ].map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                preload={false}
+                className="rounded-sm border border-border bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
           <aside className="space-y-5 lg:sticky lg:top-20 lg:self-start">

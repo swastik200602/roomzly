@@ -1,15 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { useNavigate } from "@tanstack/react-router";
 import { Heart, GitCompare, BadgeCheck, Star } from "lucide-react";
-import { memo, useState } from "react";
+import { memo } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/stores/wishlist";
 import { useCompare } from "@/stores/compare";
 import { useAuth } from "@/stores/auth";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ProgressiveImage } from "@/components/property/ProgressiveImage";
 import type { Property } from "@/lib/properties";
 import { formatCurrency } from "@/lib/currency";
 
@@ -34,7 +34,18 @@ function PropertyCardComponent({ property: p }: Props) {
         className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
       >
         <div className="relative aspect-[3/4] overflow-hidden bg-surface mb-5 border border-border">
-          <ImageWithSkeleton src={p.image} alt={p.title} />
+          {p.image ? (
+            <ProgressiveImage
+              src={p.image}
+              alt={p.title}
+              width={800}
+              height={1066}
+              wrapperClassName="absolute inset-0"
+              className="object-cover group-hover:scale-[1.04]"
+            />
+          ) : (
+            <div className="absolute inset-0 grid place-items-center bg-surface-hi text-mono-eyebrow">No image</div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
           {/* Code stamp */}
@@ -142,27 +153,3 @@ function PropertyCardComponent({ property: p }: Props) {
 }
 
 export const PropertyCard = memo(PropertyCardComponent);
-
-function ImageWithSkeleton({ src, alt }: { src?: string | null; alt: string }) {
-  const [loaded, setLoaded] = useState(false);
-  if (!src) {
-    return <div className="absolute inset-0 grid place-items-center bg-surface-hi text-mono-eyebrow">No image</div>;
-  }
-  return (
-    <>
-      {!loaded && <Skeleton className="absolute inset-0 w-full h-full rounded-none" />}
-      <img
-        src={src}
-        alt={alt}
-        loading="lazy"
-        width={800}
-        height={1066}
-        onLoad={() => setLoaded(true)}
-        className={cn(
-          "w-full h-full object-cover transition-transform duration-700 ease-[var(--ease-expo)] group-hover:scale-[1.04]",
-          !loaded && "opacity-0",
-        )}
-      />
-    </>
-  );
-}

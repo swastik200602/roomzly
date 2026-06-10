@@ -5,6 +5,8 @@ import { Search as SearchIcon, SlidersHorizontal, X } from "lucide-react";
 import { z } from "zod";
 
 import { PropertyCard } from "@/components/property/PropertyCard";
+import { PropertyGridSkeleton } from "@/components/property/PropertyCardSkeleton";
+import { LocationScanningState, RoomzlyEmptyState, RoomzlyErrorState } from "@/components/ui/premium-states";
 import { CATEGORIES, categoryLabel } from "@/lib/properties";
 import { propertiesApi } from "@/lib/api/properties";
 import { cn } from "@/lib/utils";
@@ -235,23 +237,20 @@ function ExplorePage() {
             </select>
           </div>
 
+          {propertiesQuery.isFetching && !propertiesQuery.isLoading && (
+            <div className="mb-6">
+              <LocationScanningState message="Searching verified spaces..." />
+            </div>
+          )}
+
           {propertiesQuery.isLoading ? (
-            <div className="border border-border p-12 text-center bg-surface">
-              <p className="text-mono-eyebrow">Loading live listings</p>
-            </div>
+            <PropertyGridSkeleton count={PAGE_SIZE} />
           ) : propertiesQuery.isError ? (
-            <div className="border border-border p-12 text-center bg-surface">
-              <p className="text-mono-eyebrow mb-3">Could not load listings</p>
-              <p className="text-sm text-muted-foreground mb-6">
-                Check that the backend is running and try again.
-              </p>
-              <button
-                onClick={() => propertiesQuery.refetch()}
-                className="bg-foreground text-background px-5 py-2.5 text-sm font-semibold rounded-sm hover:opacity-80 transition-opacity"
-              >
-                Retry
-              </button>
-            </div>
+            <RoomzlyErrorState
+              title="We couldn't refresh the property map"
+              description="Your search is safe. Try again and Roomzly will reconnect to the latest verified spaces."
+              onAction={() => propertiesQuery.refetch()}
+            />
           ) : paginated.length === 0 ? (
             <EmptyResults onReset={() => { setQ(""); setCat(undefined); setBudget([0, 30000]); setBeds("any"); setActiveAmen([]); setPage(1); }} />
           ) : (
@@ -434,18 +433,12 @@ function FiltersPanel({
 
 function EmptyResults({ onReset }: { onReset: () => void }) {
   return (
-    <div className="border border-border p-12 text-center bg-surface">
-      <p className="text-mono-eyebrow mb-3">No matches</p>
-      <h3 className="font-display text-2xl mb-3">Nothing fits those filters yet</h3>
-      <p className="text-sm text-muted-foreground mb-6">
-        Loosen your search or reset to see every available property.
-      </p>
-      <button
-        onClick={onReset}
-        className="bg-foreground text-background px-5 py-2.5 text-sm font-semibold rounded-sm hover:opacity-80 transition-opacity"
-      >
-        Reset filters
-      </button>
-    </div>
+    <RoomzlyEmptyState
+      eyebrow="No perfect match yet"
+      title="We couldn't find a space for those filters"
+      description="Loosen the filters, try a nearby locality, or reset the search to see every available Roomzly listing."
+      actionLabel="Reset filters"
+      onAction={onReset}
+    />
   );
 }

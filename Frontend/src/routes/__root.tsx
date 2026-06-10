@@ -15,6 +15,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthBootstrap } from "@/components/auth/AuthBootstrap";
 import { InteractionRecovery } from "@/components/runtime/InteractionRecovery";
 import { RealtimeBridge } from "@/components/runtime/RealtimeBridge";
+import { RouteTransition } from "@/components/runtime/RouteTransition";
+import { RoomzlyLoadingOverlay } from "@/components/runtime/RoomzlyLoadingOverlay";
 import { OrganizationJsonLd, SeoManager } from "@/components/runtime/SeoManager";
 
 function NotFoundComponent() {
@@ -118,11 +120,14 @@ function RootComponent() {
         <RealtimeBridge />
         <Navbar />
         <main className="min-h-dvh">
-          <Outlet />
+          <RouteTransition>
+            <Outlet />
+          </RouteTransition>
         </main>
         <Footer />
         <MobileBottomNav />
         <Toaster />
+        <RoomzlyLoadingOverlay />
       </AuthBootstrap>
     </QueryClientProvider>
   );

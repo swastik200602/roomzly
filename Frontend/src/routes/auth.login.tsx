@@ -10,7 +10,9 @@ import { authApi } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import { propertiesApi } from "@/lib/api/properties";
 import { useAuth } from "@/stores/auth";
+import { usePremiumLoading } from "@/stores/loading";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
+import { ActionButtonContent } from "@/components/ui/action-feedback";
 
 export const Route = createFileRoute("/auth/login")({
   head: () => ({ meta: [{ title: "Sign in - Roomzly" }] }),
@@ -20,17 +22,24 @@ export const Route = createFileRoute("/auth/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const setSession = useAuth((s) => s.setSession);
+  const showPremiumLoading = usePremiumLoading((s) => s.show);
+  const hidePremiumLoading = usePremiumLoading((s) => s.hideAfterMinimum);
   const facetsQuery = useQuery({ queryKey: ["properties", "facets"], queryFn: propertiesApi.facets });
   const facets = facetsQuery.data;
   const loginMutation = useMutation({
     mutationFn: authApi.login,
+    onMutate: () => {
+      showPremiumLoading("Opening your Roomzly space...");
+    },
     onSuccess: (session) => {
       setSession(session);
       toast.success("Signed in");
       navigate({ to: "/dashboard" });
+      hidePremiumLoading();
     },
     onError: (error) => {
       toast.error(error instanceof ApiError ? error.message : "Sign in failed");
+      hidePremiumLoading();
     },
   });
 
@@ -91,29 +100,29 @@ function LoginPage() {
         </div>
 
         {/* Glass panel */}
-        <div className="bg-white/95 text-neutral-950 border border-white/40 rounded-sm p-6 sm:p-8 shadow-2xl dark:bg-neutral-950/90 dark:text-white dark:border-white/10">
-          <p className="text-mono-eyebrow text-neutral-500 mb-2 dark:text-white/45">Welcome back</p>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tighter text-neutral-950 mb-1 dark:text-white">
+        <div className="rounded-sm border border-white/10 bg-neutral-950/90 p-6 text-white shadow-2xl sm:p-8 light:border-white/40 light:bg-white/95 light:text-neutral-950">
+          <p className="text-mono-eyebrow mb-2 text-white/45 light:text-neutral-500">Welcome back</p>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tighter text-white mb-1 light:text-neutral-950">
             Sign in.
           </h1>
-          <p className="text-sm text-neutral-500 mb-7 dark:text-white/45">
+          <p className="text-sm text-white/45 mb-7 light:text-neutral-500">
             Your portfolio is waiting.
           </p>
 
           <form className="space-y-4" onSubmit={onSubmit}>
             <div>
-              <label className="text-mono-eyebrow text-neutral-600 block mb-2 dark:text-white/45">Email</label>
+              <label className="text-mono-eyebrow text-white/45 block mb-2 light:text-neutral-600">Email</label>
               <input
                 type="email"
                 name="email"
                 required
                 placeholder="you@example.com"
-                className="w-full h-11 bg-neutral-50 border border-neutral-200 text-neutral-950 placeholder:text-neutral-400 px-3 text-sm rounded-sm focus:outline-none focus:border-accent focus:bg-white transition-all dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/25 dark:focus:bg-white/10"
+                className="w-full h-11 bg-white/5 border border-white/10 text-white placeholder:text-white/25 px-3 text-sm rounded-sm focus:outline-none focus:border-accent focus:bg-white/10 transition-all light:bg-neutral-50 light:border-neutral-200 light:text-neutral-950 light:placeholder:text-neutral-400 light:focus:bg-white"
               />
             </div>
             <div>
               <div className="flex justify-between mb-2">
-                <label className="text-mono-eyebrow text-neutral-600 dark:text-white/45">Password</label>
+                <label className="text-mono-eyebrow text-white/45 light:text-neutral-600">Password</label>
                 <Link to="/auth/forgot-password" className="font-mono text-[10px] uppercase tracking-widest text-accent hover:text-accent/70 transition-colors">
                   Forgot?
                 </Link>
@@ -123,7 +132,7 @@ function LoginPage() {
                 name="password"
                 required
                 placeholder="••••••••"
-                className="w-full h-11 bg-neutral-50 border border-neutral-200 text-neutral-950 placeholder:text-neutral-400 px-3 text-sm rounded-sm focus:outline-none focus:border-accent focus:bg-white transition-all dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/25 dark:focus:bg-white/10"
+                className="w-full h-11 bg-white/5 border border-white/10 text-white placeholder:text-white/25 px-3 text-sm rounded-sm focus:outline-none focus:border-accent focus:bg-white/10 transition-all light:bg-neutral-50 light:border-neutral-200 light:text-neutral-950 light:placeholder:text-neutral-400 light:focus:bg-white"
               />
             </div>
 
@@ -132,17 +141,21 @@ function LoginPage() {
               disabled={loginMutation.isPending}
               className="w-full bg-accent text-accent-foreground py-3 text-sm font-bold uppercase tracking-widest rounded-sm hover:bg-accent/90 transition-all mt-1 inline-flex items-center justify-center gap-2 group"
             >
-              {loginMutation.isPending ? "Signing in..." : "Continue"}
-              <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
+              <ActionButtonContent
+                pending={loginMutation.isPending}
+                idleLabel="Continue"
+                pendingLabel="Opening Roomzly"
+                icon={<ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />}
+              />
             </button>
           </form>
 
           <div className="relative my-5">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-neutral-200 dark:border-white/10" />
+              <div className="w-full border-t border-white/10 light:border-neutral-200" />
             </div>
             <div className="relative flex justify-center">
-              <span className="px-3 font-mono text-[10px] uppercase tracking-widest text-neutral-400 bg-white dark:bg-neutral-950">
+              <span className="px-3 font-mono text-[10px] uppercase tracking-widest text-white/35 bg-neutral-950 light:bg-white light:text-neutral-400">
                 or
               </span>
             </div>

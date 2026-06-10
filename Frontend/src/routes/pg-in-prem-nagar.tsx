@@ -5,17 +5,17 @@ import { SeoLandingPage } from "@/components/static/SeoLandingPage";
 export const Route = createFileRoute("/pg-in-prem-nagar")({
   head: () => ({
     meta: [
-      { title: "PG in Prem Nagar - Roomzly" },
-      { name: "description", content: "Find PG and hostel stays in Prem Nagar with Roomzly location search and owner contact tools." },
-      { property: "og:title", content: "PG in Prem Nagar - Roomzly" },
-      { property: "og:description", content: "Browse PGs near Prem Nagar using location-aware Roomzly search." },
+      { title: "PG in Prem Nagar, Dehradun - Student PGs | Roomzly" },
+      { name: "description", content: "Find PG in Prem Nagar, Dehradun near colleges and transport with photos, rent details, amenities, verified owner contact, and Roomzly chat." },
+      { property: "og:title", content: "PG in Prem Nagar, Dehradun - Roomzly" },
+      { property: "og:description", content: "Browse student PGs and hostels near Prem Nagar with locality-aware Roomzly search." },
     ],
   }),
   component: () => (
     <SeoLandingPage
       eyebrow="Prem Nagar PGs"
       title="PG in Prem Nagar"
-      intro="Explore PGs and managed stays in Prem Nagar with locality-aware search, owner contact actions, saved listings, and map-ready property locations."
+      intro="Explore PGs, hostels, and managed stays in Prem Nagar, Dehradun with locality-aware search, owner contact actions, saved listings, amenities, and map-ready property locations."
       city="Prem Nagar, Dehradun"
       category="PG / Hostels"
       exploreTo="/explore?city=Dehradun&locality=Prem%20Nagar&cat=pg"

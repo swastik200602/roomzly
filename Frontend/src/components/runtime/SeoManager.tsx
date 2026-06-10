@@ -3,39 +3,45 @@ import { useEffect } from "react";
 
 const SITE_URL = "https://roomzly.in";
 const SITE_NAME = "Roomzly";
-const DEFAULT_TITLE = "Roomzly - Verified homes, PGs, and rentals";
+const DEFAULT_TITLE = "Roomzly - Rooms, PGs, flats, and rentals in Dehradun";
 const DEFAULT_DESCRIPTION =
-  "Roomzly helps you discover verified rooms, PGs, apartments, villas, and premium rentals with trusted owner contact.";
+  "Find rooms, PGs, flats, hostels, and rental properties in Dehradun and Uttarakhand with verified owner contact, chat, photos, and booking tools on Roomzly.";
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.svg`;
 
-const PAGE_SEO: Record<string, { title: string; description: string }> = {
+type SeoConfig = {
+  title: string;
+  description: string;
+  noindex?: boolean;
+};
+
+const PAGE_SEO: Record<string, SeoConfig> = {
   "/": {
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
   },
   "/explore": {
-    title: "Explore verified properties - Roomzly",
-    description: "Browse verified rooms, PGs, apartments, villas, and commercial rentals on Roomzly.",
+    title: "Explore rooms, PGs, flats, and rentals - Roomzly",
+    description: "Browse rooms for rent, PGs, hostels, flats, and verified rental properties with filters, photos, maps, and owner contact on Roomzly.",
   },
   "/rooms-in-dehradun": {
-    title: "Rooms in Dehradun - Roomzly",
-    description: "Find verified rooms for rent in Dehradun with owner contact, booking requests, and Roomzly chat.",
+    title: "Rooms in Dehradun for rent - Verified rooms | Roomzly",
+    description: "Find rooms for rent in Dehradun with verified owner contact, photos, pricing, WhatsApp, private chat, and booking request tools on Roomzly.",
   },
   "/pg-in-dehradun": {
-    title: "PG in Dehradun - Roomzly",
-    description: "Discover verified PGs and managed hostels in Dehradun for students and working professionals.",
+    title: "PG in Dehradun - Hostels and managed stays | Roomzly",
+    description: "Search PG in Dehradun for students and working professionals with meals, WiFi, laundry, security, photos, and verified owner contact.",
   },
   "/pg-in-prem-nagar": {
-    title: "PG in Prem Nagar - Roomzly",
-    description: "Find PG accommodation in Prem Nagar, Dehradun with verified owners and practical rental details.",
+    title: "PG in Prem Nagar, Dehradun - Student PGs | Roomzly",
+    description: "Find PG accommodation in Prem Nagar, Dehradun near colleges and transport with photos, pricing, amenities, and owner contact.",
   },
   "/flats-in-dehradun": {
-    title: "Flats in Dehradun - Roomzly",
-    description: "Browse verified flats and apartments for rent in Dehradun across budgets and neighborhoods.",
+    title: "Flats in Dehradun for rent - Apartments | Roomzly",
+    description: "Browse flats and apartments for rent in Dehradun by budget, locality, bedrooms, amenities, photos, and verified owner contact.",
   },
   "/properties-in-uttarakhand": {
-    title: "Properties in Uttarakhand - Roomzly",
-    description: "Explore verified rooms, PGs, flats, villas, and rental properties across Uttarakhand.",
+    title: "Rental properties in Uttarakhand - Roomzly",
+    description: "Explore rooms, PGs, flats, villas, and rental properties across Uttarakhand with search filters and trusted owner contact.",
   },
   "/verified-owners": {
     title: "Verified Owners - Roomzly",
@@ -88,11 +94,11 @@ function setMeta(selector: string, attribute: "content" | "href", value: string)
   if (element) element.setAttribute(attribute, value);
 }
 
-function routeSeo(pathname: string) {
+function routeSeo(pathname: string): SeoConfig {
   if (pathname.startsWith("/listing/")) {
     return {
       title: "Property listing - Roomzly",
-      description: "View Roomzly property details, owner contact options, booking requests, amenities, and location.",
+      description: "View Roomzly property details with photos, rent, amenities, owner contact, private chat, booking requests, and location.",
     };
   }
 
@@ -147,14 +153,41 @@ export function SeoManager() {
 }
 
 export function OrganizationJsonLd() {
-  const data = {
+  const data = [
+    {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: SITE_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/favicon-512.png`,
-    sameAs: [SITE_URL],
-  };
+      image: `${SITE_URL}/favicon-512.png`,
+      sameAs: ["https://www.linkedin.com/company/roomzly/"],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: SITE_NAME,
+      alternateName: ["Roomzly India", "Roomzly Rentals", "Roomzly Dehradun"],
+      url: SITE_URL,
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${SITE_URL}/explore?q={search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: "Roomzly important pages",
+      itemListElement: [
+        { "@type": "SiteNavigationElement", position: 1, name: "Rooms in Dehradun", url: `${SITE_URL}/rooms-in-dehradun` },
+        { "@type": "SiteNavigationElement", position: 2, name: "PG in Dehradun", url: `${SITE_URL}/pg-in-dehradun` },
+        { "@type": "SiteNavigationElement", position: 3, name: "PG in Prem Nagar", url: `${SITE_URL}/pg-in-prem-nagar` },
+        { "@type": "SiteNavigationElement", position: 4, name: "Flats in Dehradun", url: `${SITE_URL}/flats-in-dehradun` },
+        { "@type": "SiteNavigationElement", position: 5, name: "Explore Properties", url: `${SITE_URL}/explore` },
+      ],
+    },
+  ];
 
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />;
 }
