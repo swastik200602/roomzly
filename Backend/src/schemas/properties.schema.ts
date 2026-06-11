@@ -5,6 +5,8 @@ export const propertyQuerySchema = z.object({
   q: z.string().trim().optional(),
   category: z.nativeEnum(PropertyCategory).optional(),
   cat: z.string().optional(),
+  college: z.string().trim().optional(),
+  collegeSlug: z.string().trim().optional(),
   city: z.string().trim().optional(),
   locality: z.string().trim().optional(),
   neighborhood: z.string().trim().optional(),
@@ -28,10 +30,12 @@ export const propertyQuerySchema = z.object({
           .filter(Boolean);
       }
       return [];
-    }, z.array(z.string().min(1).max(80)).max(20))
+  }, z.array(z.string().min(1).max(80)).max(20))
     .default([]),
   premium: z.coerce.boolean().optional(),
   verified: z.coerce.boolean().optional(),
+  ownerVerified: z.coerce.boolean().optional(),
+  studentFriendly: z.coerce.boolean().optional(),
   sort: z.enum(["featured", "price-asc", "price-desc", "newest", "popular"]).default("featured"),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(50).default(12)

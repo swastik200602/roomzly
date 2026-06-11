@@ -14,6 +14,12 @@ import type {
 } from "@/schemas/properties.schema.js";
 import { mapProperty } from "@/modules/properties/properties.mapper.js";
 import { uploadService } from "@/modules/uploads/uploads.service.js";
+import {
+  collegeBounds,
+  colleges,
+  findCollegeBySearchTerm,
+  findCollegeBySlug,
+} from "@/modules/properties/colleges.js";
 
 const includeProperty = {
   images: true,
@@ -77,9 +83,11 @@ function buildWhere(input: PropertyQueryInput): Prisma.PropertyWhereInput {
   const minPrice = input.minPrice ?? input.min;
   const maxPrice = input.maxPrice ?? input.max;
   const category = normalizeCategory(input);
+  const college = resolveCollege(input);
   return {
     active: true,
     ...(category ? { category } : {}),
+    ...(college ? collegeBounds(college) : {}),
     ...(input.city ? { city: { contains: input.city, mode: "insensitive" } } : {}),
     ...(input.locality ? { locality: { contains: input.locality, mode: "insensitive" } } : {}),
     ...(input.neighborhood ? { neighborhood: { contains: input.neighborhood, mode: "insensitive" } } : {}),
@@ -99,6 +107,7 @@ function buildWhere(input: PropertyQueryInput): Prisma.PropertyWhereInput {
       : {}),
     ...(input.premium !== undefined ? { premium: input.premium } : {}),
     ...(input.verified !== undefined ? { verified: input.verified } : {}),
+    ...(input.ownerVerified !== undefined ? { owner: { is: { verified: input.ownerVerified } } } : {}),
     ...(input.beds !== undefined ? { beds: { gte: input.beds } } : {}),
     ...(input.amenities.length > 0 ? { amenities: { hasEvery: input.amenities } } : {}),
     ...(minPrice !== undefined || maxPrice !== undefined
@@ -109,22 +118,39 @@ function buildWhere(input: PropertyQueryInput): Prisma.PropertyWhereInput {
           }
         }
       : {}),
-    ...(input.q
+    ...(searchText(input)
       ? {
           OR: [
-            { title: { contains: input.q, mode: "insensitive" } },
-            { city: { contains: input.q, mode: "insensitive" } },
-            { locality: { contains: input.q, mode: "insensitive" } },
-            { neighborhood: { contains: input.q, mode: "insensitive" } },
-            { state: { contains: input.q, mode: "insensitive" } },
-            { country: { contains: input.q, mode: "insensitive" } },
-            { address: { contains: input.q, mode: "insensitive" } },
-            { formattedAddress: { contains: input.q, mode: "insensitive" } },
-            { description: { contains: input.q, mode: "insensitive" } }
+            { title: { contains: searchText(input), mode: "insensitive" } },
+            { city: { contains: searchText(input), mode: "insensitive" } },
+            { locality: { contains: searchText(input), mode: "insensitive" } },
+            { neighborhood: { contains: searchText(input), mode: "insensitive" } },
+            { state: { contains: searchText(input), mode: "insensitive" } },
+            { country: { contains: searchText(input), mode: "insensitive" } },
+            { address: { contains: searchText(input), mode: "insensitive" } },
+            { formattedAddress: { contains: searchText(input), mode: "insensitive" } },
+            { description: { contains: searchText(input), mode: "insensitive" } }
           ]
         }
       : {})
   };
+}
+
+function resolveCollege(input: PropertyQueryInput) {
+  return (
+    findCollegeBySlug(input.collegeSlug) ??
+    findCollegeBySearchTerm(input.college) ??
+    ((!input.college && !input.collegeSlug) ? findCollegeBySearchTerm(input.q) : undefined)
+  );
+}
+
+function searchText(input: PropertyQueryInput) {
+  if (!input.q) return undefined;
+  const collegeFromQ =
+    !input.college &&
+    !input.collegeSlug &&
+    findCollegeBySearchTerm(input.q);
+  return collegeFromQ ? undefined : input.q;
 }
 
 async function recalculateRating(tx: Prisma.TransactionClient, propertyId: string) {
@@ -181,6 +207,54 @@ async function recordPropertyView(propertyId: string, source?: string): Promise<
   ]);
 }
 
+function sortMappedProperties(
+  items: ReturnType<typeof mapProperty>[],
+  sort: PropertyQueryInput["sort"],
+  preferredCollegeSlug?: string,
+) {
+  return [...items].sort((left, right) => {
+    if (preferredCollegeSlug) {
+      const leftPrimary = left.primaryCollege?.collegeSlug === preferredCollegeSlug ? left.primaryCollege : null;
+      const rightPrimary = right.primaryCollege?.collegeSlug === preferredCollegeSlug ? right.primaryCollege : null;
+      if (leftPrimary && rightPrimary) {
+        if (sort === "price-asc") return left.price - right.price;
+        if (sort === "price-desc") return right.price - left.price;
+        if (sort === "newest") {
+          return new Date(right.createdAt ?? 0).getTime() - new Date(left.createdAt ?? 0).getTime();
+        }
+        if (sort === "popular") return (right.viewCount ?? 0) - (left.viewCount ?? 0);
+
+        if (right.popularAmongStudents !== left.popularAmongStudents) {
+          return Number(right.popularAmongStudents) - Number(left.popularAmongStudents);
+        }
+        if ((right.studentFriendlyScore ?? 0) !== (left.studentFriendlyScore ?? 0)) {
+          return (right.studentFriendlyScore ?? 0) - (left.studentFriendlyScore ?? 0);
+        }
+        if (leftPrimary.verifiedNearCampus !== rightPrimary.verifiedNearCampus) {
+          return Number(rightPrimary.verifiedNearCampus) - Number(leftPrimary.verifiedNearCampus);
+        }
+        if (leftPrimary.distanceKm !== rightPrimary.distanceKm) {
+          return leftPrimary.distanceKm - rightPrimary.distanceKm;
+        }
+      }
+    }
+
+    if (sort === "price-asc") return left.price - right.price;
+    if (sort === "price-desc") return right.price - left.price;
+    if (sort === "newest") {
+      return new Date(right.createdAt ?? 0).getTime() - new Date(left.createdAt ?? 0).getTime();
+    }
+    if (sort === "popular") return (right.viewCount ?? 0) - (left.viewCount ?? 0);
+    if (Number(Boolean(right.premium)) !== Number(Boolean(left.premium))) {
+      return Number(Boolean(right.premium)) - Number(Boolean(left.premium));
+    }
+    if (Number(right.verified) !== Number(left.verified)) {
+      return Number(right.verified) - Number(left.verified);
+    }
+    return new Date(right.createdAt ?? 0).getTime() - new Date(left.createdAt ?? 0).getTime();
+  });
+}
+
 export const propertyService = {
   async list(input: PropertyQueryInput) {
     const cacheKey = `properties:list:${crypto.createHash("sha1").update(JSON.stringify(input)).digest("hex")}`;
@@ -188,6 +262,45 @@ export const propertyService = {
     if (cached) return JSON.parse(cached) as unknown;
 
     const where = buildWhere(input);
+    const college = resolveCollege(input);
+
+    if (college || input.studentFriendly) {
+      const items = await prisma.property.findMany({
+        where,
+        include: includeProperty,
+        take: 200,
+      });
+      const mapped = items.map((item) => mapProperty(item, college?.slug));
+      const collegeFiltered = college
+        ? mapped.filter((item) => item.primaryCollege?.collegeSlug === college.slug)
+        : mapped.filter((item) => item.primaryCollege);
+      const trustFiltered = input.studentFriendly
+        ? collegeFiltered.filter((item) => (item.studentFriendlyScore ?? 0) >= 70)
+        : collegeFiltered;
+      const sorted = sortMappedProperties(trustFiltered, input.sort, college?.slug);
+      const total = sorted.length;
+      const sliced = sorted.slice((input.page - 1) * input.limit, input.page * input.limit);
+      const result = {
+        data: sliced,
+        meta: {
+          page: input.page,
+          limit: input.limit,
+          total,
+          totalPages: Math.max(1, Math.ceil(total / input.limit)),
+          college: college
+            ? {
+                slug: college.slug,
+                name: college.name,
+                shortName: college.shortName,
+                areaName: college.areaName,
+              }
+            : undefined,
+        },
+      };
+      await safeCacheSet(cacheKey, JSON.stringify(result), 5 * 60);
+      return result;
+    }
+
     const [items, total] = await Promise.all([
       prisma.property.findMany({
         where,
@@ -199,12 +312,12 @@ export const propertyService = {
       prisma.property.count({ where })
     ]);
     const result = {
-      data: items.map(mapProperty),
+      data: items.map((item) => mapProperty(item)),
       meta: {
         page: input.page,
         limit: input.limit,
         total,
-        totalPages: Math.ceil(total / input.limit)
+        totalPages: Math.ceil(total / input.limit),
       }
     };
     await safeCacheSet(cacheKey, JSON.stringify(result), 5 * 60);
@@ -219,7 +332,7 @@ export const propertyService = {
     const order = new Map(ids.map((id, index) => [id, index]));
     return items
       .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
-      .map(mapProperty);
+      .map((item) => mapProperty(item));
   },
 
   async facets() {
@@ -255,7 +368,13 @@ export const propertyService = {
       cities: cities.map((item) => ({
         name: item.city,
         count: item._count._all
-      }))
+      })),
+      colleges: colleges.map((college) => ({
+        slug: college.slug,
+        name: college.name,
+        shortName: college.shortName,
+        areaName: college.areaName,
+      })),
     };
   },
 
@@ -285,7 +404,7 @@ export const propertyService = {
       include: includeProperty,
       orderBy: { createdAt: "desc" }
     });
-    return items.map(mapProperty);
+    return items.map((item) => mapProperty(item));
   },
 
   async create(ownerId: string, input: CreatePropertyInput) {

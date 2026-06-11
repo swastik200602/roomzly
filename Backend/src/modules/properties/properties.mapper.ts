@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { collegeMatchesForProperty } from "@/modules/properties/colleges.js";
 
 type PropertyWithRelations = Prisma.PropertyGetPayload<{
   include: {
@@ -44,7 +45,25 @@ function furnishingToFrontend(furnishing: PropertyWithRelations["furnishing"]) {
   return labels[furnishing];
 }
 
-export function mapProperty(property: PropertyWithRelations) {
+export function mapProperty(property: PropertyWithRelations, preferredCollegeSlug?: string) {
+  const nearbyColleges = collegeMatchesForProperty(
+    {
+      latitude: property.latitude,
+      longitude: property.longitude,
+      category: property.category,
+      amenities: property.amenities,
+      price: Number(property.price),
+      verified: property.verified,
+      viewCount: property.viewCount,
+      reviewCount: property.reviewCount,
+      ownerPhoneVerified: property.owner.phoneVerified,
+    },
+    preferredCollegeSlug,
+  );
+  const primaryCollege = nearbyColleges[0] ?? null;
+  const ownerVerified = property.owner.verified;
+  const responseRate = property.owner.phoneVerified ? 96 : ownerVerified ? 91 : 84;
+
   return {
     id: property.id,
     slug: property.slug,
@@ -72,6 +91,10 @@ export function mapProperty(property: PropertyWithRelations) {
     verified: property.verified,
     premium: property.premium,
     active: property.active,
+    primaryCollege,
+    nearbyColleges,
+    studentFriendlyScore: primaryCollege?.studentFriendlyScore ?? null,
+    popularAmongStudents: primaryCollege?.popularAmongStudents ?? false,
     rating: Number(property.rating),
     reviews: property.reviewCount,
     reviewCount: property.reviewCount,
@@ -85,12 +108,13 @@ export function mapProperty(property: PropertyWithRelations) {
       id: property.owner.id,
       name: `${property.owner.firstName} ${property.owner.lastName}`,
       initials: `${property.owner.firstName[0] ?? ""}${property.owner.lastName[0] ?? ""}`.toUpperCase(),
-      role: property.owner.verified ? "Verified owner" : "Owner",
+      role: ownerVerified ? "Verified owner" : "Owner",
+      verified: ownerVerified,
       avatarUrl: property.owner.avatarUrl,
       phone: property.owner.phone,
       phoneNumber: property.owner.phoneNumber,
       phoneVerified: property.owner.phoneVerified,
-      responseRate: 95
+      responseRate,
     },
     createdAt: property.createdAt,
     updatedAt: property.updatedAt
