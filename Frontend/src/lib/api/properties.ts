@@ -4,6 +4,8 @@ import { apiRequest, apiRequestEnvelope } from "@/lib/api/client";
 export type PropertyListParams = {
   q?: string;
   cat?: string;
+  college?: string;
+  collegeSlug?: string;
   city?: string;
   locality?: string;
   neighborhood?: string;
@@ -14,10 +16,12 @@ export type PropertyListParams = {
   radiusKm?: number;
   premium?: number | boolean;
   verified?: number | boolean;
+  ownerVerified?: number | boolean;
   min?: number;
   max?: number;
   beds?: number;
   amenities?: string[];
+  studentFriendly?: number | boolean;
   sort?: string;
   page?: number;
   limit?: number;
@@ -30,6 +34,12 @@ export type PaginatedProperties = {
     limit: number;
     total: number;
     totalPages: number;
+    college?: {
+      slug: string;
+      name: string;
+      shortName: string;
+      areaName: string;
+    };
   };
 };
 
@@ -39,6 +49,7 @@ export type PropertyFacets = {
   verified: number;
   categories: { key: string; category: string; count: number }[];
   cities: { name: string; count: number }[];
+  colleges: { slug: string; name: string; shortName: string; areaName: string }[];
 };
 
 export type PropertyReview = {

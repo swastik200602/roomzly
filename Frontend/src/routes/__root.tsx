@@ -1,11 +1,14 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  HeadContent,
+  Scripts,
   Outlet,
   Link,
   createRootRouteWithContext,
   useRouter,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
+import appStylesHref from "../styles.css?url";
 
 import { reportError } from "../lib/error-reporting";
 import { Navbar } from "@/components/layout/Navbar";
@@ -87,48 +90,76 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Roomzly — Premium real estate, considered" },
+      { title: "Roomzly - Student rooms and PGs near colleges in Dehradun" },
       {
         name: "description",
         content:
-          "Roomzly is a curated real estate ecosystem connecting verified spaces with discerning residents. Rent, buy, and discover apartments, villas, PGs, and commercial spaces.",
+          "Find verified rooms, PGs, flats, and student rentals near major Dehradun colleges with trust-focused discovery on Roomzly.",
       },
       { name: "author", content: "Roomzly" },
-      { property: "og:title", content: "Roomzly — Premium real estate, considered" },
+      { property: "og:title", content: "Roomzly - Student rooms and PGs near colleges in Dehradun" },
       {
         property: "og:description",
-        content: "Curated, verified, and considered properties for the modern resident.",
+        content: "Browse by college, compare trust signals, and contact owners faster on Roomzly.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "stylesheet", href: appStylesHref }],
   }),
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
 
+function RootDocument({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <HeadContent />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+          rel="stylesheet"
+        />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+      </head>
+      <body>
+        {children}
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthBootstrap>
-        <SeoManager />
-        <OrganizationJsonLd />
-        <InteractionRecovery />
-        <RealtimeBridge />
-        <Navbar />
-        <main className="min-h-dvh">
-          <RouteTransition>
-            <Outlet />
-          </RouteTransition>
-        </main>
-        <Footer />
-        <MobileBottomNav />
-        <Toaster />
-        <RoomzlyLoadingOverlay />
-      </AuthBootstrap>
-    </QueryClientProvider>
+    <RootDocument>
+      <QueryClientProvider client={queryClient}>
+        <AuthBootstrap>
+          <SeoManager />
+          <OrganizationJsonLd />
+          <InteractionRecovery />
+          <RealtimeBridge />
+          <Navbar />
+          <main className="min-h-dvh">
+            <RouteTransition>
+              <Outlet />
+            </RouteTransition>
+          </main>
+          <Footer />
+          <MobileBottomNav />
+          <Toaster />
+          <RoomzlyLoadingOverlay />
+        </AuthBootstrap>
+      </QueryClientProvider>
+    </RootDocument>
   );
 }

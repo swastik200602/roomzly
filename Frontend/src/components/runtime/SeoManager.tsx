@@ -3,9 +3,9 @@ import { useEffect } from "react";
 
 const SITE_URL = "https://roomzly.in";
 const SITE_NAME = "Roomzly";
-const DEFAULT_TITLE = "Roomzly - Rooms, PGs, flats, and rentals in Dehradun";
+const DEFAULT_TITLE = "Roomzly - Student rooms and PGs near colleges in Dehradun";
 const DEFAULT_DESCRIPTION =
-  "Find rooms, PGs, flats, hostels, and rental properties in Dehradun and Uttarakhand with verified owner contact, chat, photos, and booking tools on Roomzly.";
+  "Find verified rooms, PGs, flats, and student rentals near UPES, Graphic Era, DIT, JBIT, BFIT, DBS, and Tula's Institute on Roomzly.";
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.svg`;
 
 type SeoConfig = {
@@ -20,8 +20,8 @@ const PAGE_SEO: Record<string, SeoConfig> = {
     description: DEFAULT_DESCRIPTION,
   },
   "/explore": {
-    title: "Explore rooms, PGs, flats, and rentals - Roomzly",
-    description: "Browse rooms for rent, PGs, hostels, flats, and verified rental properties with filters, photos, maps, and owner contact on Roomzly.",
+    title: "Explore student rentals near Dehradun colleges - Roomzly",
+    description: "Browse verified rooms, PGs, flats, and student-friendly rentals by college, locality, budget, and trust signals on Roomzly.",
   },
   "/rooms-in-dehradun": {
     title: "Rooms in Dehradun for rent - Verified rooms | Roomzly",
@@ -95,6 +95,18 @@ function setMeta(selector: string, attribute: "content" | "href", value: string)
 }
 
 function routeSeo(pathname: string): SeoConfig {
+  if (pathname.startsWith("/colleges/")) {
+    const slug = pathname.split("/")[2] ?? "";
+    const readable = slug
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+    return {
+      title: `Rooms and PGs near ${readable} - Roomzly`,
+      description: `Browse verified rooms, PGs, flats, and student stays near ${readable} with campus-aware discovery and trust signals on Roomzly.`,
+    };
+  }
+
   if (pathname.startsWith("/listing/")) {
     return {
       title: "Property listing - Roomzly",
@@ -182,8 +194,8 @@ export function OrganizationJsonLd() {
       itemListElement: [
         { "@type": "SiteNavigationElement", position: 1, name: "Rooms in Dehradun", url: `${SITE_URL}/rooms-in-dehradun` },
         { "@type": "SiteNavigationElement", position: 2, name: "PG in Dehradun", url: `${SITE_URL}/pg-in-dehradun` },
-        { "@type": "SiteNavigationElement", position: 3, name: "PG in Prem Nagar", url: `${SITE_URL}/pg-in-prem-nagar` },
-        { "@type": "SiteNavigationElement", position: 4, name: "Flats in Dehradun", url: `${SITE_URL}/flats-in-dehradun` },
+        { "@type": "SiteNavigationElement", position: 3, name: "Rooms near UPES", url: `${SITE_URL}/colleges/upes` },
+        { "@type": "SiteNavigationElement", position: 4, name: "PG in Prem Nagar", url: `${SITE_URL}/pg-in-prem-nagar` },
         { "@type": "SiteNavigationElement", position: 5, name: "Explore Properties", url: `${SITE_URL}/explore` },
       ],
     },

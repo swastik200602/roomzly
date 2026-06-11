@@ -3,78 +3,89 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  GitCompare,
+  GraduationCap,
+  KeyRound,
   MapPin,
   Search as SearchIcon,
   ShieldCheck,
   Sparkles,
-  KeyRound,
 } from "lucide-react";
 import { useState } from "react";
 
+import heroBg from "@/assets/hero-bg.jpg";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { propertiesApi, type PropertyFacets } from "@/lib/api/properties";
-import { CATEGORIES, type Property } from "@/lib/properties";
-import { useAuth } from "@/stores/auth";
-import { cn } from "@/lib/utils";
+import { COLLEGES, STUDENT_AREAS } from "@/lib/college-discovery";
 import { formatCurrency } from "@/lib/currency";
-
-import heroBg from "@/assets/hero-bg.jpg";
+import { CATEGORIES, type Property } from "@/lib/properties";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/stores/auth";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Roomzly - Find your next perspective" },
+      { title: "Roomzly - Student rooms and PGs near colleges in Dehradun" },
       {
         name: "description",
         content:
-          "Premium curated real estate. Rent, buy, or discover verified apartments, villas, PGs and commercial spaces with Roomzly.",
+          "Find verified rooms, PGs, flats, and student rentals near UPES, Graphic Era, DIT, JBIT, BFIT, DBS, and Tula's Institute on Roomzly.",
       },
-      { property: "og:title", content: "Roomzly - Find your next perspective" },
+      { property: "og:title", content: "Roomzly - Student rooms and PGs near colleges in Dehradun" },
       {
         property: "og:description",
-        content: "Curated, verified, and considered properties for the modern resident.",
+        content:
+          "Browse by college, compare trust signals, and contact owners faster on Roomzly's student-first rental marketplace.",
       },
     ],
   }),
   component: HomePage,
 });
 
-const TABS = ["Rent", "PG", "Commercial"] as const;
-
 function HomePage() {
   const facetsQuery = useQuery({ queryKey: ["properties", "facets"], queryFn: propertiesApi.facets });
-  const trendingQuery = useQuery({
-    queryKey: ["properties", "home", "trending"],
-    queryFn: () => propertiesApi.list({ sort: "popular", limit: 3 }),
+  const campusQuery = useQuery({
+    queryKey: ["properties", "home", "campus"],
+    queryFn: () => propertiesApi.list({ verified: true, studentFriendly: true, sort: "featured", limit: 3 }),
   });
-  const featuredQuery = useQuery({
-    queryKey: ["properties", "home", "featured"],
-    queryFn: () => propertiesApi.list({ premium: true, sort: "featured", limit: 3 }),
+  const verifiedQuery = useQuery({
+    queryKey: ["properties", "home", "verified"],
+    queryFn: () => propertiesApi.list({ verified: true, ownerVerified: true, sort: "popular", limit: 3 }),
   });
+
   const facets = facetsQuery.data;
+  const campusItems = campusQuery.data?.data ?? [];
+  const verifiedItems = verifiedQuery.data?.data ?? [];
 
   return (
     <div className="animate-fade-in">
       <Hero facets={facets} />
-      <CategoriesStrip facets={facets} />
-      <PropertySection
-        label="Curated selection"
-        title="Trending Properties"
-        items={trendingQuery.data?.data ?? []}
-        isLoading={trendingQuery.isLoading}
-        isError={trendingQuery.isError}
-        retry={() => trendingQuery.refetch()}
-      />
-      <CitiesBento facets={facets} />
-      <PropertySection
-        label="Hand-picked"
-        title="Premium Residences"
-        items={featuredQuery.data?.data ?? []}
-        isLoading={featuredQuery.isLoading}
-        isError={featuredQuery.isError}
-        retry={() => featuredQuery.refetch()}
-        exploreSearch={{ premium: 1 } as never}
-      />
+      <BrowseByCollege />
+      {campusQuery.isLoading || campusQuery.isError || campusItems.length > 0 ? (
+        <PropertySection
+          label="Popular near campus"
+          title="Student-ready listings"
+          body="Shortlist verified rooms, PGs, and shared rentals that already show campus distance, trust cues, and student fit."
+          items={campusItems}
+          isLoading={campusQuery.isLoading}
+          isError={campusQuery.isError}
+          retry={() => campusQuery.refetch()}
+          exploreSearch={{ verified: 1, studentFriendly: 1 } as never}
+        />
+      ) : null}
+      <StudentAreas />
+      {verifiedQuery.isLoading || verifiedQuery.isError || verifiedItems.length > 0 ? (
+        <PropertySection
+          label="Trust first"
+          title="Verified listings you can contact confidently"
+          body="These homes surface clearer owner trust, mobile verification, and listing quality so students can decide faster."
+          items={verifiedItems}
+          isLoading={verifiedQuery.isLoading}
+          isError={verifiedQuery.isError}
+          retry={() => verifiedQuery.refetch()}
+          exploreSearch={{ verified: 1, ownerVerified: 1 } as never}
+        />
+      ) : null}
       <HowItWorks />
       <Stats facets={facets} />
       <CallToAction />
@@ -83,22 +94,21 @@ function HomePage() {
 }
 
 function Hero({ facets }: { facets?: PropertyFacets }) {
-  const [tab, setTab] = useState<(typeof TABS)[number]>("Rent");
+  const navigate = useNavigate();
+  const [collegeSlug, setCollegeSlug] = useState("");
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("");
   const [budget, setBudget] = useState("");
-  const navigate = useNavigate();
-  const verified = facets?.verified ?? 0;
 
-  const onSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const max = budget ? Number(budget) : undefined;
+  const onSearch = (event: React.FormEvent) => {
+    event.preventDefault();
     navigate({
       to: "/explore",
       search: {
         q: location || undefined,
+        collegeSlug: collegeSlug || undefined,
         cat: category || undefined,
-        max,
+        max: budget ? Number(budget) : undefined,
       } as never,
     });
   };
@@ -107,97 +117,89 @@ function Hero({ facets }: { facets?: PropertyFacets }) {
     <section className="relative overflow-hidden border-b border-border">
       <div className="absolute inset-0 z-0">
         <img src={heroBg} alt="" aria-hidden="true" className="size-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/80" />
       </div>
 
-      <div className="relative z-10 pt-20 pb-24 md:pt-32 md:pb-32 px-6">
-        <div className="max-w-5xl mx-auto text-center animate-fade-up">
-          <p className="text-mono-eyebrow mb-6 !text-white/70">
-            <span className="inline-block size-1.5 rounded-full bg-accent mr-2 align-middle animate-pulse" />
-            {verified.toLocaleString()} verified listings
-          </p>
-          <h1 className="font-display text-5xl sm:text-6xl md:text-8xl tracking-tighter leading-[0.9] font-bold mb-8 text-white">
-            FIND YOUR
-            <br />
-            <span className="text-white/50">NEXT PERSPECTIVE.</span>
-          </h1>
-          <p className="text-base md:text-lg text-white/60 max-w-xl mx-auto mb-12">
-            A curated marketplace for considered living across live Roomzly listings.
-          </p>
+      <div className="relative z-10 px-6 pb-24 pt-20 md:pb-28 md:pt-32">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl animate-fade-up">
+            <p className="mb-6 text-mono-eyebrow !text-white/75">
+              <span className="mr-2 inline-block size-1.5 animate-pulse rounded-full bg-accent align-middle" />
+              Browse verified rentals near {COLLEGES.length} Dehradun colleges
+            </p>
+            <h1 className="font-display text-5xl font-bold leading-[0.92] tracking-tight text-white sm:text-6xl md:text-7xl">
+              Student housing that starts with your campus.
+            </h1>
+            <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/75 md:text-lg">
+              Pick your college, compare trust signals, and find rooms, PGs, flats, and shared stays that are actually practical for student life in Dehradun.
+            </p>
+          </div>
 
-          <form
-            onSubmit={onSearch}
-            className="max-w-4xl mx-auto bg-surface border border-border p-2 rounded-sm text-left"
-          >
-            <div className="flex border-b border-border overflow-x-auto no-scrollbar">
-              {TABS.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTab(t)}
-                  className={cn(
-                    "px-5 py-3 text-[11px] font-mono uppercase tracking-widest whitespace-nowrap transition-colors border-b-2",
-                    tab === t
-                      ? "border-accent text-foreground"
-                      : "border-transparent text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr_auto] divide-y md:divide-y-0 md:divide-x divide-border mt-2">
-              <label className="p-4 block cursor-text">
-                <span className="block text-[10px] uppercase font-mono text-muted-foreground mb-1">
-                  Location
-                </span>
+          <form onSubmit={onSearch} className="mt-10 max-w-5xl border border-border bg-surface p-2 text-left">
+            <div className="grid grid-cols-1 gap-px bg-border md:grid-cols-[1.2fr_1fr_1fr_1fr_auto]">
+              <label className="bg-background p-4">
+                <span className="mb-1 block text-[10px] font-mono uppercase text-muted-foreground">College</span>
                 <div className="flex items-center gap-2">
-                  <MapPin className="size-3.5 text-muted-foreground shrink-0" />
+                  <GraduationCap className="size-3.5 shrink-0 text-muted-foreground" />
+                  <select
+                    value={collegeSlug}
+                    onChange={(event) => setCollegeSlug(event.target.value)}
+                    className="w-full appearance-none bg-transparent text-sm font-medium focus:outline-none"
+                  >
+                    <option value="">Any campus</option>
+                    {COLLEGES.map((college) => (
+                      <option key={college.slug} value={college.slug}>
+                        {college.shortName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </label>
+              <label className="bg-background p-4">
+                <span className="mb-1 block text-[10px] font-mono uppercase text-muted-foreground">Locality</span>
+                <div className="flex items-center gap-2">
+                  <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
                   <input
                     type="text"
                     value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="City or neighborhood"
-                    className="bg-transparent text-sm font-medium w-full focus:outline-none placeholder:text-muted-foreground/60"
+                    onChange={(event) => setLocation(event.target.value)}
+                    placeholder="Prem Nagar, Clement Town..."
+                    className="w-full bg-transparent text-sm font-medium placeholder:text-muted-foreground/60 focus:outline-none"
                   />
                 </div>
               </label>
-              <label className="p-4 block cursor-pointer">
-                <span className="block text-[10px] uppercase font-mono text-muted-foreground mb-1">
-                  Type
-                </span>
+              <label className="bg-background p-4">
+                <span className="mb-1 block text-[10px] font-mono uppercase text-muted-foreground">Type</span>
                 <select
                   value={category}
                   onChange={(event) => setCategory(event.target.value)}
-                  className="bg-transparent text-sm font-medium focus:outline-none w-full appearance-none cursor-pointer"
+                  className="w-full appearance-none bg-transparent text-sm font-medium focus:outline-none"
                 >
-                  <option className="bg-surface" value="">Any property</option>
+                  <option value="">Any stay</option>
                   {CATEGORIES.map((item) => (
-                    <option key={item.key} className="bg-surface" value={item.key}>
+                    <option key={item.key} value={item.key}>
                       {item.label}
                     </option>
                   ))}
                 </select>
               </label>
-              <label className="p-4 block cursor-pointer">
-                <span className="block text-[10px] uppercase font-mono text-muted-foreground mb-1">
-                  Budget
-                </span>
+              <label className="bg-background p-4">
+                <span className="mb-1 block text-[10px] font-mono uppercase text-muted-foreground">Budget</span>
                 <select
                   value={budget}
                   onChange={(event) => setBudget(event.target.value)}
-                  className="bg-transparent text-sm font-medium focus:outline-none w-full appearance-none cursor-pointer"
+                  className="w-full appearance-none bg-transparent text-sm font-medium focus:outline-none"
                 >
-                  <option className="bg-surface" value="">Any</option>
-                  <option className="bg-surface" value="20000">Up to {formatCurrency(20000)}</option>
-                  <option className="bg-surface" value="50000">Up to {formatCurrency(50000)}</option>
-                  <option className="bg-surface" value="100000">Up to {formatCurrency(100000)}</option>
+                  <option value="">Any budget</option>
+                  <option value="9000">Up to {formatCurrency(9000)}</option>
+                  <option value="15000">Up to {formatCurrency(15000)}</option>
+                  <option value="25000">Up to {formatCurrency(25000)}</option>
                 </select>
               </label>
-              <div className="p-2">
+              <div className="bg-background p-2">
                 <button
                   type="submit"
-                  className="w-full h-full min-h-12 px-6 bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-sm uppercase tracking-widest rounded-sm transition-all inline-flex items-center justify-center gap-2"
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 bg-accent px-6 text-sm font-bold uppercase tracking-widest text-accent-foreground transition-colors hover:bg-accent/90"
                 >
                   <SearchIcon className="size-4" />
                   Search
@@ -205,29 +207,98 @@ function Hero({ facets }: { facets?: PropertyFacets }) {
               </div>
             </div>
           </form>
+
+          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <QuickStat label="Verified listings" value={(facets?.verified ?? 0).toLocaleString()} />
+            <QuickStat label="Campus filters" value={COLLEGES.length.toString()} />
+            <QuickStat label="Student areas" value={STUDENT_AREAS.length.toString()} />
+            <QuickStat label="Active listings" value={(facets?.total ?? 0).toLocaleString()} />
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-function CategoriesStrip({ facets }: { facets?: PropertyFacets }) {
-  const counts = new Map(facets?.categories.map((item) => [item.key, item.count]) ?? []);
+function QuickStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border border-white/15 bg-black/20 px-4 py-3 backdrop-blur-sm">
+      <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/60">{label}</p>
+      <p className="mt-2 font-display text-2xl tracking-tight text-white">{value}</p>
+    </div>
+  );
+}
+
+function BrowseByCollege() {
   return (
     <section className="border-b border-border">
-      <div className="max-w-7xl mx-auto px-6 py-10">
-        <div className="flex items-center gap-3 overflow-x-auto no-scrollbar">
-          {CATEGORIES.map((c) => (
+      <div className="mx-auto max-w-7xl px-6 py-16">
+        <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-mono-eyebrow mb-3">Browse by college</p>
+            <h2 className="font-display text-3xl tracking-tight md:text-4xl">Start with the campus, not just the locality.</h2>
+          </div>
+          <Link
+            to="/explore"
+            search={{ studentFriendly: 1, verified: 1 } as never}
+            className="inline-flex items-center gap-2 text-sm font-medium hover:text-accent"
+          >
+            Explore student-friendly listings
+            <ArrowRight className="size-4" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {COLLEGES.map((college) => (
             <Link
-              key={c.key}
-              to="/explore"
-              search={{ cat: c.key } as never}
-              className="group shrink-0 inline-flex items-center gap-3 px-4 py-2.5 border border-border rounded-sm hover:bg-surface-hi hover:border-foreground/30 transition-colors"
+              key={college.slug}
+              to="/colleges/$collegeSlug"
+              params={{ collegeSlug: college.slug }}
+              className="group border border-border bg-surface p-5 transition-colors hover:border-foreground/30 hover:bg-surface-hi"
             >
-              <span className="text-sm font-medium">{c.label}</span>
-              <span className="text-[10px] font-mono text-muted-foreground tracking-wider">
-                {(counts.get(c.key) ?? 0).toLocaleString()}
-              </span>
+              <div className="mb-6 inline-flex size-10 items-center justify-center border border-border bg-background">
+                <GraduationCap className="size-4 text-accent" />
+              </div>
+              <h3 className="font-display text-2xl tracking-tight">{college.shortName}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{college.name}</p>
+              <p className="mt-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                {college.areaName}, {college.city}
+              </p>
+              <div className="mt-6 inline-flex items-center gap-2 text-sm text-foreground/80 group-hover:text-accent">
+                See nearby rooms
+                <ArrowRight className="size-4" />
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function StudentAreas() {
+  return (
+    <section className="border-b border-border bg-surface">
+      <div className="mx-auto max-w-7xl px-6 py-12">
+        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-mono-eyebrow mb-2">Student verified areas</p>
+            <h2 className="font-display text-2xl tracking-tight md:text-3xl">Popular student pockets around Dehradun.</h2>
+          </div>
+          <p className="max-w-xl text-sm text-muted-foreground">
+            These are the areas students usually check first when they want quick campus access and practical day-to-day living.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {STUDENT_AREAS.map((area) => (
+            <Link
+              key={area.label}
+              to="/explore"
+              search={area.search as never}
+              className="inline-flex items-center gap-2 border border-border bg-background px-4 py-2 text-sm hover:bg-surface-hi"
+            >
+              <MapPin className="size-4 text-accent" />
+              {area.label}
             </Link>
           ))}
         </div>
@@ -239,6 +310,7 @@ function CategoriesStrip({ facets }: { facets?: PropertyFacets }) {
 function PropertySection({
   label,
   title,
+  body,
   items,
   isLoading,
   isError,
@@ -247,6 +319,7 @@ function PropertySection({
 }: {
   label: string;
   title: string;
+  body: string;
   items: Property[];
   isLoading: boolean;
   isError: boolean;
@@ -254,24 +327,23 @@ function PropertySection({
   exploreSearch?: Record<string, unknown>;
 }) {
   return (
-    <section className="max-w-7xl mx-auto px-6 py-24">
-      <div className="flex justify-between items-end mb-12">
-        <div>
-          <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
-            {label}
-          </span>
-          <h2 className="font-display text-3xl md:text-4xl mt-3 tracking-tight">
-            {title}
-          </h2>
+    <section className="mx-auto max-w-7xl px-6 py-20">
+      <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="max-w-2xl">
+          <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">{label}</span>
+          <h2 className="mt-3 font-display text-3xl tracking-tight md:text-4xl">{title}</h2>
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{body}</p>
         </div>
         <Link
           to="/explore"
           search={exploreSearch as never}
-          className="hidden sm:inline-flex text-sm font-medium border-b border-foreground pb-1 hover:text-accent hover:border-accent transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-medium hover:text-accent"
         >
-          View Listings
+          View listings
+          <ArrowRight className="size-4" />
         </Link>
       </div>
+
       {isLoading ? (
         <div className="border border-border bg-surface p-12 text-center">
           <p className="text-mono-eyebrow">Loading live listings</p>
@@ -281,19 +353,15 @@ function PropertySection({
           <p className="text-mono-eyebrow mb-4">Could not load listings</p>
           <button
             onClick={retry}
-            className="bg-foreground text-background px-5 py-2.5 text-sm font-semibold rounded-sm hover:opacity-80 transition-opacity"
+            className="bg-foreground px-5 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-80"
           >
             Retry
           </button>
         </div>
-      ) : items.length === 0 ? (
-        <div className="border border-border bg-surface p-12 text-center">
-          <p className="text-sm text-muted-foreground">No listings found.</p>
-        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-14">
-          {items.map((p, i) => (
-            <PropertyCard key={p.id} property={p} index={i} />
+        <div className="grid grid-cols-1 gap-x-8 gap-y-14 md:grid-cols-3">
+          {items.map((property, index) => (
+            <PropertyCard key={property.id} property={property} index={index} />
           ))}
         </div>
       )}
@@ -301,137 +369,51 @@ function PropertySection({
   );
 }
 
-const CITY_BANNER_IMAGES = [
-  "https://images.unsplash.com/photo-1660791601899-f79f14cc427d?auto=format&fit=crop&w=1400&q=80",
-  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1400&q=80",
-  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1400&q=80",
-  "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=1400&q=80",
-  "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1400&q=80",
-  "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1400&q=80",
-];
-
-const CITY_BANNER_BY_NAME: Record<string, string> = {
-  dehradun: "https://images.unsplash.com/photo-1660791601899-f79f14cc427d?auto=format&fit=crop&w=1400&q=80",
-  uttarakhand: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1400&q=80",
-  "prem nagar": "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1400&q=80",
-  mussoorie: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1400&q=80",
-  delhi: "https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=1400&q=80",
-  mumbai: "https://images.unsplash.com/photo-1566552881560-0be862a7c445?auto=format&fit=crop&w=1400&q=80",
-  bengaluru: "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=1400&q=80",
-  bangalore: "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=1400&q=80",
-};
-
-function cityImage(name: string, index: number) {
-  const normalized = name.toLowerCase();
-  const matched = Object.entries(CITY_BANNER_BY_NAME).find(([key]) => normalized.includes(key));
-  if (matched) return matched[1];
-
-  const hash = [...normalized].reduce((total, character) => total + character.charCodeAt(0), index);
-  return CITY_BANNER_IMAGES[Math.abs(hash) % CITY_BANNER_IMAGES.length];
-}
-
-function CitiesBento({ facets }: { facets?: PropertyFacets }) {
-  const cities = facets?.cities.slice(0, 3) ?? [];
-  if (cities.length === 0) return null;
-
-  return (
-    <section className="bg-surface border-y border-border py-24">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex justify-between items-end mb-12">
-          <div>
-            <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
-              Where we live
-            </span>
-            <h2 className="font-display text-3xl md:text-4xl mt-3 tracking-tight">
-              Active Cities
-            </h2>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 h-[420px] md:h-[500px]">
-          {cities.map((c, index) => (
-            <Link
-              key={c.name}
-              to="/explore"
-              search={{ q: c.name } as never}
-              className={cn(
-                "relative overflow-hidden group border border-border",
-                index === 0 && "col-span-2",
-              )}
-            >
-              <img
-                src={cityImage(c.name, index)}
-                alt={c.name}
-                loading="lazy"
-                className="size-full object-cover transition-transform duration-700 ease-[var(--ease-expo)] group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/30 to-transparent p-6 flex flex-col justify-end">
-                <h4 className="font-display text-2xl md:text-3xl tracking-tight">
-                  {c.name}
-                </h4>
-                <p className="text-mono-eyebrow mt-2">
-                  {c.count.toLocaleString()} Listings
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 const STEPS = [
   {
-    icon: SearchIcon,
-    label: "01 / Search",
-    title: "Find what fits",
-    body: "Filter by city, budget, type and amenities. Saved properties sync to your account.",
+    icon: GraduationCap,
+    label: "01 / Pick your college",
+    title: "Browse by campus first",
+    body: "Start with UPES, Graphic Era, DIT, JBIT, BFIT, DBS, or Tula's and skip the friction of translating campus intent into localities.",
   },
   {
     icon: ShieldCheck,
-    label: "02 / Verify",
-    title: "Talk to owners",
-    body: "Verified listings connect you directly with owners and property managers.",
+    label: "02 / Compare trust",
+    title: "Check trust and fit fast",
+    body: "Cards and comparison views now surface listing verification, owner verification, mobile trust, and student fit in the same decision path.",
   },
   {
     icon: KeyRound,
-    label: "03 / Move in",
-    title: "Request and settle",
-    body: "Send booking requests and keep every conversation in your dashboard.",
+    label: "03 / Contact with confidence",
+    title: "Move from shortlist to owner",
+    body: "Contact flows stay direct, but the product gives students clearer context before they message, call, or open WhatsApp.",
   },
 ];
 
 function HowItWorks() {
   return (
     <section className="border-y border-border bg-background">
-      <div className="max-w-7xl mx-auto px-6 py-24">
-        <div className="max-w-2xl mb-16">
-          <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
-            How Roomzly works
-          </span>
-          <h2 className="font-display text-3xl md:text-5xl mt-3 tracking-tight leading-[1.05]">
-            A considered path<br />
-            <span className="text-muted-foreground">from search to keys.</span>
+      <div className="mx-auto max-w-7xl px-6 py-20">
+        <div className="mb-14 max-w-2xl">
+          <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">How Roomzly works</span>
+          <h2 className="mt-3 font-display text-3xl tracking-tight md:text-5xl">
+            A cleaner search path for students and parents.
           </h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-border border border-border">
-          {STEPS.map((s, i) => (
+        <div className="grid grid-cols-1 gap-px border border-border bg-border md:grid-cols-3">
+          {STEPS.map((step, index) => (
             <motion.div
-              key={s.label}
+              key={step.label}
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{
-                duration: 0.7,
-                delay: i * 0.1,
-                ease: [0.16, 1, 0.3, 1],
-              }}
+              transition={{ duration: 0.7, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
               className="bg-background p-8 md:p-10"
             >
-              <s.icon className="size-6 text-accent mb-8" />
-              <p className="text-mono-eyebrow mb-4">{s.label}</p>
-              <h3 className="font-display text-2xl mb-3 tracking-tight">{s.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{s.body}</p>
+              <step.icon className="mb-8 size-6 text-accent" />
+              <p className="text-mono-eyebrow mb-4">{step.label}</p>
+              <h3 className="font-display text-2xl tracking-tight">{step.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
             </motion.div>
           ))}
         </div>
@@ -442,27 +424,25 @@ function HowItWorks() {
 
 function Stats({ facets }: { facets?: PropertyFacets }) {
   const stats = [
-    { v: (facets?.total ?? 0).toLocaleString(), l: "Active properties" },
-    { v: (facets?.verified ?? 0).toLocaleString(), l: "Verified properties" },
-    { v: (facets?.premium ?? 0).toLocaleString(), l: "Premium listings" },
-    { v: (facets?.cities.length ?? 0).toLocaleString(), l: "Cities" },
+    { value: (facets?.total ?? 0).toLocaleString(), label: "Active listings" },
+    { value: (facets?.verified ?? 0).toLocaleString(), label: "Verified listings" },
+    { value: COLLEGES.length.toString(), label: "Supported colleges" },
+    { value: STUDENT_AREAS.length.toString(), label: "Student areas" },
   ];
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-24">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
-        {stats.map((s, i) => (
+    <section className="mx-auto max-w-7xl px-6 py-20">
+      <div className="grid grid-cols-2 gap-x-8 gap-y-12 lg:grid-cols-4">
+        {stats.map((stat, index) => (
           <motion.div
-            key={s.l}
+            key={stat.label}
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: i * 0.08 }}
+            transition={{ duration: 0.6, delay: index * 0.08 }}
           >
-            <p className="font-display text-5xl md:text-6xl font-bold tracking-tighter mb-2">
-              {s.v}
-            </p>
-            <p className="text-mono-eyebrow">{s.l}</p>
+            <p className="font-display text-5xl font-bold tracking-tight md:text-6xl">{stat.value}</p>
+            <p className="mt-2 text-mono-eyebrow">{stat.label}</p>
           </motion.div>
         ))}
       </div>
@@ -475,28 +455,28 @@ function CallToAction() {
   const canManageListings = user?.role === "OWNER" || user?.role === "ADMIN";
 
   return (
-    <section className="max-w-7xl mx-auto px-6 pb-24">
-      <div className="border border-border p-10 md:p-16 bg-surface relative overflow-hidden">
-        <Sparkles className="size-5 text-accent mb-6" />
-        <h2 className="font-display text-3xl md:text-5xl tracking-tight max-w-2xl leading-[1.05]">
-          Own a space worth showing?
+    <section className="mx-auto max-w-7xl px-6 pb-24">
+      <div className="border border-border bg-surface p-10 md:p-16">
+        <Sparkles className="mb-6 size-5 text-accent" />
+        <h2 className="max-w-2xl font-display text-3xl tracking-tight md:text-5xl">
+          Need to fill a room before the next semester starts?
         </h2>
-        <p className="text-muted-foreground mt-4 max-w-xl">
-          Roomzly hosts verified owners and keeps every listing tied to a real account.
+        <p className="mt-4 max-w-2xl text-muted-foreground">
+          Roomzly now helps students discover listings by campus, so owners and managers can reach more relevant demand without extra listing clutter.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           {canManageListings ? (
             <Link
               to="/dashboard/add-property"
-              className="inline-flex items-center gap-2 bg-foreground text-background px-5 py-3 text-sm font-semibold rounded-sm hover:opacity-80 transition-opacity"
+              className="inline-flex items-center gap-2 bg-foreground px-5 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-80"
             >
-              List your property
+              Add your listing
               <ArrowRight className="size-4" />
             </Link>
           ) : (
             <Link
               to={user ? "/dashboard" : "/auth/signup"}
-              className="inline-flex items-center gap-2 bg-foreground text-background px-5 py-3 text-sm font-semibold rounded-sm hover:opacity-80 transition-opacity"
+              className="inline-flex items-center gap-2 bg-foreground px-5 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-80"
             >
               {user ? "Open dashboard" : "Create owner account"}
               <ArrowRight className="size-4" />
@@ -504,9 +484,11 @@ function CallToAction() {
           )}
           <Link
             to="/explore"
-            className="inline-flex items-center gap-2 border border-border px-5 py-3 text-sm font-medium rounded-sm hover:bg-surface-hi transition-colors"
+            search={{ studentFriendly: 1, verified: 1 } as never}
+            className="inline-flex items-center gap-2 border border-border px-5 py-3 text-sm font-medium hover:bg-surface-hi"
           >
-            Explore the marketplace
+            Browse student stays
+            <GitCompare className="size-4" />
           </Link>
         </div>
       </div>

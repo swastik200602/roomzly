@@ -41,6 +41,7 @@ import { Route as DashboardBookingsRouteImport } from './routes/dashboard.bookin
 import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard.analytics'
 import { Route as DashboardAdminRouteImport } from './routes/dashboard.admin'
 import { Route as DashboardAddPropertyRouteImport } from './routes/dashboard.add-property'
+import { Route as CollegesCollegeSlugRouteImport } from './routes/colleges.$collegeSlug'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
@@ -207,6 +208,11 @@ const DashboardAddPropertyRoute = DashboardAddPropertyRouteImport.update({
   path: '/add-property',
   getParentRoute: () => DashboardRoute,
 } as any)
+const CollegesCollegeSlugRoute = CollegesCollegeSlugRouteImport.update({
+  id: '/colleges/$collegeSlug',
+  path: '/colleges/$collegeSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/auth/signup',
   path: '/auth/signup',
@@ -261,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/colleges/$collegeSlug': typeof CollegesCollegeSlugRoute
   '/dashboard/add-property': typeof DashboardAddPropertyRoute
   '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
@@ -299,6 +306,7 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/colleges/$collegeSlug': typeof CollegesCollegeSlugRoute
   '/dashboard/add-property': typeof DashboardAddPropertyRoute
   '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
@@ -339,6 +347,7 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/colleges/$collegeSlug': typeof CollegesCollegeSlugRoute
   '/dashboard/add-property': typeof DashboardAddPropertyRoute
   '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
@@ -380,6 +389,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/signup'
+    | '/colleges/$collegeSlug'
     | '/dashboard/add-property'
     | '/dashboard/admin'
     | '/dashboard/analytics'
@@ -418,6 +428,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/signup'
+    | '/colleges/$collegeSlug'
     | '/dashboard/add-property'
     | '/dashboard/admin'
     | '/dashboard/analytics'
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/signup'
+    | '/colleges/$collegeSlug'
     | '/dashboard/add-property'
     | '/dashboard/admin'
     | '/dashboard/analytics'
@@ -497,6 +509,7 @@ export interface RootRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  CollegesCollegeSlugRoute: typeof CollegesCollegeSlugRoute
   ListingSlugRoute: typeof ListingSlugRoute
 }
 
@@ -726,6 +739,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAddPropertyRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/colleges/$collegeSlug': {
+      id: '/colleges/$collegeSlug'
+      path: '/colleges/$collegeSlug'
+      fullPath: '/colleges/$collegeSlug'
+      preLoaderRoute: typeof CollegesCollegeSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/signup': {
       id: '/auth/signup'
       path: '/auth/signup'
@@ -820,8 +840,19 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSignupRoute: AuthSignupRoute,
+  CollegesCollegeSlugRoute: CollegesCollegeSlugRoute,
   ListingSlugRoute: ListingSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

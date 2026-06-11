@@ -12,6 +12,19 @@ export interface PropertyImage {
   order: number;
 }
 
+export interface PropertyCollegeMatch {
+  collegeSlug: string;
+  collegeName: string;
+  shortName: string;
+  areaName: string;
+  distanceKm: number;
+  walkingMinutes: number;
+  drivingMinutes: number;
+  studentFriendlyScore: number;
+  popularAmongStudents: boolean;
+  verifiedNearCampus: boolean;
+}
+
 export interface Property {
   id: string;
   slug: string;
@@ -40,6 +53,10 @@ export interface Property {
   verified: boolean;
   premium?: boolean;
   active?: boolean;
+  primaryCollege?: PropertyCollegeMatch | null;
+  nearbyColleges?: PropertyCollegeMatch[];
+  studentFriendlyScore?: number | null;
+  popularAmongStudents?: boolean;
   image?: string | null;
   images?: PropertyImage[];
   gallery: string[];
@@ -50,6 +67,7 @@ export interface Property {
     name: string;
     initials: string;
     role: string;
+    verified?: boolean;
     responseRate: number;
     avatarUrl?: string | null;
     phone?: string | null;

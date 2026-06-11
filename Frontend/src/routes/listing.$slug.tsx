@@ -18,6 +18,7 @@ import {
   Copy,
   Send,
   Navigation,
+  GraduationCap,
   Wifi,
   Car,
   Dumbbell,
@@ -422,6 +423,11 @@ function ListingPage() {
           </span>
           {p.verified && (
             <span className="inline-flex items-center gap-1.5">
+              <BadgeCheck className="size-3.5 text-accent shrink-0" /> Verified listing
+            </span>
+          )}
+          {p.owner.verified && (
+            <span className="inline-flex items-center gap-1.5">
               <BadgeCheck className="size-3.5 text-accent shrink-0" /> Verified owner
             </span>
           )}
@@ -430,11 +436,22 @@ function ListingPage() {
               <BadgeCheck className="size-3.5 text-accent shrink-0" /> Mobile Verified
             </span>
           )}
+          {p.primaryCollege && (
+            <span className="inline-flex items-center gap-1.5">
+              <GraduationCap className="size-3.5 text-accent shrink-0" />
+              {p.primaryCollege.distanceKm} km from {p.primaryCollege.shortName}
+            </span>
+          )}
         </div>
         <div className="mt-6 grid gap-2 rounded-sm border border-border bg-surface p-2 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center">
-          <div className="px-2 py-1">
+          <div className="px-2 py-1 space-y-1">
             <p className="text-sm font-semibold">Interested in this property?</p>
             <p className="text-xs text-muted-foreground">Talk to the owner directly or use Roomzly chat for privacy.</p>
+            {p.primaryCollege && (
+              <p className="text-xs text-muted-foreground">
+                {p.primaryCollege.shortName} is {p.primaryCollege.walkingMinutes} min away on foot or about {p.primaryCollege.drivingMinutes} min by road.
+              </p>
+            )}
           </div>
           <button
             type="button"
@@ -983,9 +1000,15 @@ function ListingPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-2">
                       <p className="truncate text-sm font-semibold">{p.owner.name}</p>
-                      {p.verified && <BadgeCheck className="size-3.5 shrink-0 text-accent" />}
+                      {p.owner.verified && <BadgeCheck className="size-3.5 shrink-0 text-accent" />}
                     </div>
                     <p className="truncate text-xs text-muted-foreground">{p.owner.role}</p>
+                    {p.primaryCollege && (
+                      <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <GraduationCap className="size-3 text-accent" />
+                        {p.primaryCollege.distanceKm} km from {p.primaryCollege.shortName}
+                      </p>
+                    )}
                     {p.owner.phoneVerified && (
                       <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-accent">
                         <BadgeCheck className="size-3" />
