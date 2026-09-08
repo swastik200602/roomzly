@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Heart, GitCompare, User, Search, Menu, X } from "lucide-react";
+import { Heart, GitCompare, User, Search, Menu, X, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useWishlist } from "@/stores/wishlist";
 import { useCompare } from "@/stores/compare";
@@ -8,9 +8,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { to: "/explore", label: "Properties" },
-  { to: "/explore", search: { cat: "villa" }, label: "Locations" },
-  { to: "/dashboard", label: "Concierge" },
+  { to: "/explore", label: "Rooms & PGs" },
+  { to: "/search-map", label: "Campus Map" },
+  { to: "/explore", search: { verified: 1 }, label: "Verified Landlords" },
 ] as const;
 
 export function Navbar() {
@@ -64,7 +64,7 @@ export function Navbar() {
           </div>
 
           {/* Right actions */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {/* Search — always visible */}
             <Link
               to="/explore"
@@ -107,14 +107,24 @@ export function Navbar() {
               )}
             </Link>
 
-            {/* Sign in — desktop */}
+            {/* List Your PG CTA for Landlords */}
+            <Link
+              to={user ? "/dashboard/add-property" : "/auth/login"}
+              preload={false}
+              className="hidden lg:inline-flex text-xs font-semibold uppercase tracking-wider text-accent border border-accent/40 bg-accent/10 px-3 py-2 rounded-sm hover:bg-accent hover:text-accent-foreground transition-all items-center gap-1.5 ml-1"
+            >
+              <Plus className="size-3.5" />
+              List PG
+            </Link>
+
+            {/* Sign in / Dashboard — desktop */}
             <Link
               to={user ? "/dashboard" : "/auth/login"}
               preload={false}
-              className="hidden md:inline-flex text-sm font-semibold bg-foreground text-background px-4 py-2 rounded-sm hover:opacity-80 transition-opacity items-center gap-2 ml-1"
+              className="hidden md:inline-flex text-sm font-semibold bg-foreground text-background px-3.5 py-2 rounded-sm hover:opacity-80 transition-opacity items-center gap-2 ml-1"
             >
               <User className="size-3.5" />
-              {user ? "Dashboard" : "Sign In"}
+              {user ? (user.role === "OWNER" ? "Owner Portal" : user.role === "ADMIN" ? "Admin" : "Dashboard") : "Sign In"}
             </Link>
 
             {/* Hamburger — mobile only */}
@@ -188,16 +198,15 @@ export function Navbar() {
                   )}
                 </Link>
               </div>
-              {canManageListings && (
-                <Link
-                  to="/dashboard/add-property"
-                  preload={false}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-center h-11 border border-border rounded-sm text-sm font-medium hover:bg-surface-hi transition-colors"
-                >
-                  List Property
-                </Link>
-              )}
+              <Link
+                to={user ? "/dashboard/add-property" : "/auth/login"}
+                preload={false}
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center gap-2 h-11 border border-accent/40 bg-accent/10 rounded-sm text-sm font-semibold text-accent hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                <Plus className="size-4" />
+                List Your PG / Room
+              </Link>
               <Link
                 to={user ? "/dashboard" : "/auth/login"}
                 preload={false}

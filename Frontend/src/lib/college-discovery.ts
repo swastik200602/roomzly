@@ -6,6 +6,8 @@ export type CollegeDirectoryItem = {
   locality: string;
   city: string;
   state: string;
+  latitude?: number;
+  longitude?: number;
 };
 
 export const COLLEGES: CollegeDirectoryItem[] = [
@@ -17,6 +19,8 @@ export const COLLEGES: CollegeDirectoryItem[] = [
     locality: "Bidholi",
     city: "Dehradun",
     state: "Uttarakhand",
+    latitude: 30.4164,
+    longitude: 77.9668,
   },
   {
     slug: "graphic-era-university",
@@ -26,6 +30,8 @@ export const COLLEGES: CollegeDirectoryItem[] = [
     locality: "Clement Town",
     city: "Dehradun",
     state: "Uttarakhand",
+    latitude: 30.2685,
+    longitude: 78.0069,
   },
   {
     slug: "dit-university",
@@ -35,6 +41,8 @@ export const COLLEGES: CollegeDirectoryItem[] = [
     locality: "Makkawala",
     city: "Dehradun",
     state: "Uttarakhand",
+    latitude: 30.3831,
+    longitude: 78.0772,
   },
   {
     slug: "jbit",
@@ -44,6 +52,8 @@ export const COLLEGES: CollegeDirectoryItem[] = [
     locality: "Suddhowala",
     city: "Dehradun",
     state: "Uttarakhand",
+    latitude: 30.3441,
+    longitude: 77.9351,
   },
   {
     slug: "bfit",
@@ -53,6 +63,8 @@ export const COLLEGES: CollegeDirectoryItem[] = [
     locality: "Suddhowala",
     city: "Dehradun",
     state: "Uttarakhand",
+    latitude: 30.3394,
+    longitude: 77.9405,
   },
   {
     slug: "dbs",
@@ -62,6 +74,8 @@ export const COLLEGES: CollegeDirectoryItem[] = [
     locality: "Chakrata Road",
     city: "Dehradun",
     state: "Uttarakhand",
+    latitude: 30.3242,
+    longitude: 78.0416,
   },
   {
     slug: "tulas-institute",
@@ -71,6 +85,8 @@ export const COLLEGES: CollegeDirectoryItem[] = [
     locality: "Selaqui",
     city: "Dehradun",
     state: "Uttarakhand",
+    latitude: 30.3541,
+    longitude: 77.8682,
   },
 ];
 

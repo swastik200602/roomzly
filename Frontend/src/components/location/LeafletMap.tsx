@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { formatCurrency } from "@/lib/currency";
 import type { Property } from "@/lib/properties";
+import { COLLEGES } from "@/lib/college-discovery";
 import { cn } from "@/lib/utils";
 
 type LocationValue = {
@@ -44,6 +45,15 @@ function activeMarkerIcon(leaflet: LeafletModule) {
     html: '<span style="display:block;width:24px;height:24px;border-radius:9999px;background:#c9ff52;border:4px solid #111;box-shadow:0 8px 22px rgba(0,0,0,.4)"></span>',
     iconSize: [24, 24],
     iconAnchor: [12, 12],
+  });
+}
+
+function collegeMarkerIcon(leaflet: LeafletModule, shortName: string) {
+  return leaflet.divIcon({
+    className: "",
+    html: `<div style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:9999px;background:#1e1b4b;border:1.5px solid #818cf8;color:#fff;font-size:10px;font-weight:700;box-shadow:0 4px 12px rgba(0,0,0,0.35);white-space:nowrap;">🎓 ${shortName}</div>`,
+    iconSize: [80, 22],
+    iconAnchor: [40, 11],
   });
 }
 
@@ -342,6 +352,7 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
   const leafletRef = useRef<LeafletModule | null>(null);
   const mapRef = useRef<LeafletMapInstance | null>(null);
   const markerRefs = useRef<Map<string, LeafletMarkerInstance>>(new Map());
+  const collegeMarkerRefs = useRef<LeafletMarkerInstance[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const mapped = useMemo(
     () => properties.filter((property) => property.latitude != null && property.longitude != null),
@@ -366,6 +377,7 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
       mapRef.current = null;
       leafletRef.current = null;
       markerRefs.current.clear();
+      collegeMarkerRefs.current = [];
     };
   }, []);
 
@@ -376,7 +388,24 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
 
     markerRefs.current.forEach((marker) => marker.remove());
     markerRefs.current.clear();
+    collegeMarkerRefs.current.forEach((marker) => marker.remove());
+    collegeMarkerRefs.current = [];
 
+    // 1. Plot College Campus Markers (Highest Z-Index)
+    COLLEGES.forEach((college) => {
+      if (college.latitude && college.longitude) {
+        const marker = leaflet
+          .marker([college.latitude, college.longitude], {
+            icon: collegeMarkerIcon(leaflet, college.shortName),
+            zIndexOffset: 1000,
+          })
+          .addTo(map);
+        marker.bindPopup(`<div style="font-family:sans-serif;font-size:12px;padding:2px 4px;"><strong>🎓 ${college.name}</strong><div style="font-size:10px;color:#666;margin-top:2px;">${college.areaName}, Dehradun</div></div>`);
+        collegeMarkerRefs.current.push(marker);
+      }
+    });
+
+    // 2. Plot Property Markers
     mapped.forEach((property) => {
       const marker = leaflet
         .marker([property.latitude!, property.longitude!], {

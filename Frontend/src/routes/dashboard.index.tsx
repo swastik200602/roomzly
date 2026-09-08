@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowUpRight, DollarSign, Eye, Heart, MessageSquare } from "lucide-react";
+import { ArrowUpRight, CalendarCheck, Eye, Heart, IndianRupee, MessageSquare } from "lucide-react";
 import { analyticsApi } from "@/lib/api/analytics";
 import { propertiesApi } from "@/lib/api/properties";
 import { bookingsApi } from "@/lib/api/bookings";
@@ -64,11 +64,11 @@ function DashboardOverview() {
         { label: "Active listings", value: String(listings.length), icon: Eye },
         { label: "Total views", value: compact(overview?.totalViews ?? 0), icon: Eye },
         { label: "Saves", value: compact(overview?.totalSaves ?? 0), icon: Heart },
-        { label: "Revenue", value: formatCurrency(overview?.totalRevenue ?? 0), icon: DollarSign },
+        { label: "Monthly revenue", value: formatCurrency(overview?.totalRevenue ?? 0), icon: IndianRupee },
       ]
     : [
-        { label: "Bookings", value: String(bookingsQuery.data?.meta.total ?? bookings.length), icon: DollarSign },
-        { label: "Saved homes", value: String(wishlistCount), icon: Heart },
+        { label: "My bookings", value: String(bookingsQuery.data?.meta.total ?? bookings.length), icon: CalendarCheck },
+        { label: "Saved PGs", value: String(wishlistCount), icon: Heart },
         { label: "Conversations", value: String(threads.length), icon: MessageSquare },
         { label: "Pending stays", value: String(bookings.filter((booking) => booking.status === "PENDING").length), icon: Eye },
       ];
@@ -154,7 +154,12 @@ function DashboardOverview() {
               </li>
             ))}
             {!bookingsQuery.isLoading && bookings.length === 0 && (
-              <li className="py-3 text-sm text-muted-foreground">No bookings yet.</li>
+              <li className="py-6 text-center">
+                <p className="text-sm text-muted-foreground mb-2">No bookings requested yet.</p>
+                <Link to="/explore" className="text-xs font-semibold text-accent hover:underline inline-flex items-center gap-1">
+                  Browse verified student PGs <ArrowUpRight className="size-3" />
+                </Link>
+              </li>
             )}
           </ul>
         </div>
@@ -196,10 +201,20 @@ function DashboardOverview() {
               </li>
             ))}
             {canManageListings && !listingsQuery.isLoading && listings.length === 0 && (
-              <li className="text-sm text-muted-foreground">No listings yet.</li>
+              <li className="py-6 text-center">
+                <p className="text-sm text-muted-foreground mb-2">No active listings yet.</p>
+                <Link to="/dashboard/add-property" className="text-xs font-semibold text-accent hover:underline inline-flex items-center gap-1">
+                  Add your first PG listing <ArrowUpRight className="size-3" />
+                </Link>
+              </li>
             )}
             {!canManageListings && !threadsQuery.isLoading && threads.length === 0 && (
-              <li className="text-sm text-muted-foreground">No conversations yet.</li>
+              <li className="py-6 text-center">
+                <p className="text-sm text-muted-foreground mb-2">No messages yet.</p>
+                <Link to="/explore" className="text-xs font-semibold text-accent hover:underline inline-flex items-center gap-1">
+                  Message a landlord from any listing <ArrowUpRight className="size-3" />
+                </Link>
+              </li>
             )}
           </ul>
         </div>

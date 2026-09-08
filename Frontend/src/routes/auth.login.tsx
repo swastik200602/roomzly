@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, GraduationCap, Home, ShieldCheck, Sparkles } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import p1 from "@/assets/property-1.jpg";
@@ -26,6 +27,10 @@ function LoginPage() {
   const hidePremiumLoading = usePremiumLoading((s) => s.hideAfterMinimum);
   const facetsQuery = useQuery({ queryKey: ["properties", "facets"], queryFn: propertiesApi.facets });
   const facets = facetsQuery.data;
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   const loginMutation = useMutation({
     mutationFn: authApi.login,
     onMutate: () => {
@@ -33,7 +38,7 @@ function LoginPage() {
     },
     onSuccess: (session) => {
       setSession(session);
-      toast.success("Signed in");
+      toast.success("Signed in successfully");
       navigate({ to: "/dashboard" });
       hidePremiumLoading();
     },
@@ -45,10 +50,18 @@ function LoginPage() {
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
     loginMutation.mutate({
-      email: String(form.get("email") ?? ""),
-      password: String(form.get("password") ?? ""),
+      email: email.trim(),
+      password,
+    });
+  };
+
+  const handleDemoLogin = (demoEmail: string, demoPass: string) => {
+    setEmail(demoEmail);
+    setPassword(demoPass);
+    loginMutation.mutate({
+      email: demoEmail,
+      password: demoPass,
     });
   };
 
@@ -105,9 +118,51 @@ function LoginPage() {
           <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tighter text-white mb-1 light:text-neutral-950">
             Sign in.
           </h1>
-          <p className="text-sm text-white/45 mb-7 light:text-neutral-500">
-            Your portfolio is waiting.
+          <p className="text-sm text-white/45 mb-5 light:text-neutral-500">
+            Access verified student PGs and housing.
           </p>
+
+          {/* Quick Demo Access for Recruiters & Testing */}
+          <div className="mb-6 rounded-md border border-accent/30 bg-accent/10 p-3 text-left">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
+                <Sparkles className="size-3" /> Quick Demo Access
+              </span>
+              <span className="font-mono text-[9px] text-white/50 light:text-neutral-500">1-click test login</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleDemoLogin("resident@roomzly.test", "Password123!")}
+                disabled={loginMutation.isPending}
+                className="flex flex-col items-center justify-center rounded border border-white/10 bg-white/5 py-2 px-1 hover:bg-white/15 hover:border-accent transition-all text-center group cursor-pointer"
+              >
+                <GraduationCap className="size-4 mb-1 text-accent group-hover:scale-110 transition-transform" />
+                <span className="text-[11px] font-semibold text-white light:text-neutral-900 leading-tight">Student</span>
+                <span className="font-mono text-[8px] text-white/40 light:text-neutral-500">Resident</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin("owner@roomzly.test", "Password123!")}
+                disabled={loginMutation.isPending}
+                className="flex flex-col items-center justify-center rounded border border-white/10 bg-white/5 py-2 px-1 hover:bg-white/15 hover:border-accent transition-all text-center group cursor-pointer"
+              >
+                <Home className="size-4 mb-1 text-accent group-hover:scale-110 transition-transform" />
+                <span className="text-[11px] font-semibold text-white light:text-neutral-900 leading-tight">Landlord</span>
+                <span className="font-mono text-[8px] text-white/40 light:text-neutral-500">PG Owner</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin("admin@roomzly.test", "Password123!")}
+                disabled={loginMutation.isPending}
+                className="flex flex-col items-center justify-center rounded border border-white/10 bg-white/5 py-2 px-1 hover:bg-white/15 hover:border-accent transition-all text-center group cursor-pointer"
+              >
+                <ShieldCheck className="size-4 mb-1 text-accent group-hover:scale-110 transition-transform" />
+                <span className="text-[11px] font-semibold text-white light:text-neutral-900 leading-tight">Admin</span>
+                <span className="font-mono text-[8px] text-white/40 light:text-neutral-500">Moderator</span>
+              </button>
+            </div>
+          </div>
 
           <form className="space-y-4" onSubmit={onSubmit}>
             <div>
@@ -116,6 +171,8 @@ function LoginPage() {
                 type="email"
                 name="email"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 className="w-full h-11 bg-white/5 border border-white/10 text-white placeholder:text-white/25 px-3 text-sm rounded-sm focus:outline-none focus:border-accent focus:bg-white/10 transition-all light:bg-neutral-50 light:border-neutral-200 light:text-neutral-950 light:placeholder:text-neutral-400 light:focus:bg-white"
               />
@@ -131,6 +188,8 @@ function LoginPage() {
                 type="password"
                 name="password"
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full h-11 bg-white/5 border border-white/10 text-white placeholder:text-white/25 px-3 text-sm rounded-sm focus:outline-none focus:border-accent focus:bg-white/10 transition-all light:bg-neutral-50 light:border-neutral-200 light:text-neutral-950 light:placeholder:text-neutral-400 light:focus:bg-white"
               />
