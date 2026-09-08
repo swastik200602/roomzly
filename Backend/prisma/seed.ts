@@ -1,6 +1,7 @@
 import { BookingStatus, Furnishing, PrismaClient, PropertyCategory, UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import process from "node:process";
+
+declare const process: { exit: (code?: number) => never };
 
 const prisma = new PrismaClient();
 
@@ -334,7 +335,7 @@ async function main() {
   ];
   await prisma.property.deleteMany({
     where: { slug: { in: oldSlugs } }
-  }).catch(() => {});
+  }).catch(() => { });
 
   const seeded = [];
   for (const [index, property] of properties.entries()) {

@@ -8,6 +8,9 @@
 [![Redis](https://img.shields.io/badge/Redis-Upstash-DC382D.svg?logo=redis)](https://upstash.com/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.2-38B2AC.svg?logo=tailwindcss)](https://tailwindcss.com/)
 [![Socket.io](https://img.shields.io/badge/Socket.IO-4.8-010101.svg?logo=socketdotio)](https://socket.io/)
+[![CI](https://github.com/swastik200602/roomzly/actions/workflows/ci.yml/badge.svg)](https://github.com/swastik200602/roomzly/actions)
+[![Tests: Vitest](https://img.shields.io/badge/Tests-7%20Passed-brightgreen.svg?logo=vitest)](https://vitest.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 > **Roomzly** is a production-grade, full-stack rental marketplace engineered for finding and managing rooms, flats, student PGs, luxury apartments, and commercial listings. Built with a modern monorepo architecture featuring real-time chat, date-conflict-safe reservations, geo-spatial search, owner analytics, and comprehensive admin moderation.
 
