@@ -4,7 +4,8 @@ import {
   findCollegeBySlug,
   findCollegeBySearchTerm,
   collegeMatchesForProperty,
-} from "@/modules/properties/colleges.js";
+  type PropertyCollegeMatch,
+} from "./colleges.js";
 
 describe("College Geospatial Intelligence", () => {
   it("resolves major Dehradun colleges by slug and aliases", () => {
@@ -41,7 +42,7 @@ describe("College Geospatial Intelligence", () => {
     );
 
     expect(matches.length).toBeGreaterThan(0);
-    const upesMatch = matches.find((m) => m.collegeSlug === "upes");
+    const upesMatch = matches.find((m: PropertyCollegeMatch) => m.collegeSlug === "upes");
     expect(upesMatch).toBeDefined();
     expect(upesMatch?.distanceKm).toBeLessThan(1); // Within 1km
     expect(upesMatch?.walkingMinutes).toBeLessThanOrEqual(10); // Walking distance
