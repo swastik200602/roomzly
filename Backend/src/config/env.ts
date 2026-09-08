@@ -9,6 +9,7 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().url(),
   ADDITIONAL_CORS_ORIGINS: z.string().optional(),
   DATABASE_URL: z.string().min(1),
+  DIRECT_URL: z.string().optional(),
   REDIS_URL: z.string().min(1),
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
