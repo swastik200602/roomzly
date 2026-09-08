@@ -13,6 +13,17 @@
 
 ---
 
+## 🔗 Live Deployments & Endpoints
+
+| Component | Status | Production Link |
+| :--- | :--- | :--- |
+| **Backend API** | ![Operational](https://img.shields.io/badge/Status-Operational-brightgreen) | [`https://roomzly-backend.onrender.com`](https://roomzly-backend.onrender.com) |
+| **API Healthcheck** | ![Healthy](https://img.shields.io/badge/Health-200_OK-brightgreen) | [`https://roomzly-backend.onrender.com/health`](https://roomzly-backend.onrender.com/health) |
+| **Ready & DB Probe** | ![Ready](https://img.shields.io/badge/Readiness-Ready-brightgreen) | [`https://roomzly-backend.onrender.com/ready`](https://roomzly-backend.onrender.com/ready) |
+| **Sample Endpoint** | ![JSON](https://img.shields.io/badge/Properties-6_Listings-blue) | [`https://roomzly-backend.onrender.com/api/v1/properties`](https://roomzly-backend.onrender.com/api/v1/properties) |
+
+---
+
 ## 🌟 Key Highlights & Features
 
 ### 🔍 1. Discovery & Search Experience
