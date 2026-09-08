@@ -10,7 +10,7 @@
 [![Socket.io](https://img.shields.io/badge/Socket.IO-4.8-010101.svg?logo=socketdotio)](https://socket.io/)
 [![CI](https://github.com/swastik200602/roomzly/actions/workflows/ci.yml/badge.svg)](https://github.com/swastik200602/roomzly/actions)
 [![Tests: Vitest](https://img.shields.io/badge/Tests-7%20Passed-brightgreen.svg?logo=vitest)](https://vitest.dev/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](README.md)
 
 > **Roomzly** is a production-grade, full-stack rental marketplace engineered for finding and managing rooms, flats, student PGs, luxury apartments, and commercial listings. Built with a modern monorepo architecture featuring real-time chat, date-conflict-safe reservations, geo-spatial search, owner analytics, and comprehensive admin moderation.
 
@@ -194,3 +194,12 @@ Frontend client will be available at `http://localhost:5173`.
 * **Strict Payload Validation:** Every API route strictly validates incoming request bodies with `Zod` before controller execution.
 * **No Client Trust for Financials:** Total booking amount and night calculations are strictly determined on the server.
 * **Resilient Infrastructure:** Redis failures degrade gracefully to direct database queries without taking down the service.
+
+---
+
+## ⚖️ License & Intellectual Property
+
+**Proprietary Software — All Rights Reserved.**  
+Copyright © 2026 Roomzly (Swastik Singh).  
+
+This project and its entire source code, algorithms, UI designs, and architecture are proprietary intellectual property. Unauthorized copying, commercial distribution, modification, or deployment of this software without explicit written permission is strictly prohibited.
