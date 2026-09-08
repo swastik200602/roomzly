@@ -6,163 +6,267 @@ const prisma = new PrismaClient();
 const password = "Password123!";
 
 const imageUrls = [
-  "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
   "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=1200&q=80"
+  "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1540518614846-7ede433c4ef0?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1200&q=80"
 ];
 
 const owners = [
-  { email: "owner@roomzly.test", firstName: "Anika", lastName: "Patel", phone: "+91 98765 10001", bio: "Curated premium homes across Mumbai and Pune." },
-  { email: "owner2@roomzly.test", firstName: "Kabir", lastName: "Mehra", phone: "+91 98765 10002", bio: "Managed PGs and co-living residences in Bengaluru." }
+  {
+    email: "owner@roomzly.test",
+    firstName: "Vikram",
+    lastName: "Rawat",
+    phone: "+91 98765 10001",
+    bio: "Managing verified student PGs and residential flats across Bidholi, Prem Nagar, and Clement Town."
+  },
+  {
+    email: "owner2@roomzly.test",
+    firstName: "Meenakshi",
+    lastName: "Negi",
+    phone: "+91 98765 10002",
+    bio: "Comfortable co-living residences and mountain view studio flats near Graphic Era and Rajpur Road."
+  }
 ];
 
 const residents = [
-  { email: "resident@roomzly.test", firstName: "Elena", lastName: "Rossi" },
-  { email: "resident2@roomzly.test", firstName: "Rohan", lastName: "Iyer" },
-  { email: "resident3@roomzly.test", firstName: "Maya", lastName: "Kapoor" }
+  { email: "resident@roomzly.test", firstName: "Aman", lastName: "Sharma" },
+  { email: "resident2@roomzly.test", firstName: "Rohan", lastName: "Verma" },
+  { email: "resident3@roomzly.test", firstName: "Priya", lastName: "Joshi" }
 ];
 
 const properties = [
   {
-    slug: "bandra-skyline-apartment",
-    code: "101_APT",
-    title: "Bandra Skyline Apartment",
-    description: "A sunlit 3BHK with sea-facing balconies, concierge access, and a quiet work nook near Carter Road.",
-    city: "Mumbai",
-    neighborhood: "Bandra West",
-    locality: "Bandra West",
-    state: "Maharashtra",
+    slug: "pine-view-scholar-pg-bidholi",
+    code: "101_PG",
+    title: "Pine View Scholar Residency (Boys & Girls PG)",
+    description: "Fully furnished student PG located just 400m from UPES Bidholi Gate 1. Includes 3-times homestyle meals, high-speed fiber internet, power backup, study desks, and biometric entry.",
+    city: "Dehradun",
+    neighborhood: "Bidholi",
+    locality: "Bidholi",
+    state: "Uttarakhand",
     country: "India",
-    address: "Carter Road, Bandra West, Mumbai",
-    formattedAddress: "Carter Road, Bandra West, Mumbai, Maharashtra, India",
-    latitude: 19.0705,
-    longitude: 72.8226,
-    category: PropertyCategory.APARTMENT,
-    price: 185000,
-    beds: 3,
-    baths: 2.5,
-    sqft: 1680,
-    amenities: ["Sea view", "Concierge", "Parking", "Gym", "Power backup", "Modular kitchen"],
+    address: "Near UPES Gate 1, Bidholi, Dehradun",
+    formattedAddress: "Bidholi, Dehradun, Uttarakhand 248007, India",
+    latitude: 30.4185,
+    longitude: 77.9672,
+    category: PropertyCategory.PG,
+    price: 8500,
+    beds: 1,
+    baths: 1,
+    sqft: 220,
+    amenities: ["3 Times Meals", "High-Speed WiFi", "Power Backup", "Study Desk", "CCTV Security", "Laundry Service"],
     furnishing: Furnishing.FURNISHED,
     premium: true
   },
   {
-    slug: "koramangala-managed-pg",
-    code: "102_PG",
-    title: "Koramangala Managed PG",
-    description: "Professionally managed twin-sharing PG with meals, weekly housekeeping, biometric entry, and fast wifi.",
-    city: "Bengaluru",
-    neighborhood: "Koramangala",
-    locality: "Koramangala",
-    state: "Karnataka",
+    slug: "himalayan-nest-studio-bidholi",
+    code: "102_STD",
+    title: "Himalayan Nest 1BHK Student Studio",
+    description: "Peaceful mountain-facing 1BHK studio apartment near UPES Knowledge City. Private balcony, modular kitchenette, inverter backup, and quiet study environment.",
+    city: "Dehradun",
+    neighborhood: "Bidholi",
+    locality: "Bidholi",
+    state: "Uttarakhand",
     country: "India",
-    address: "5th Block, Koramangala, Bengaluru",
-    formattedAddress: "5th Block, Koramangala, Bengaluru, Karnataka, India",
-    latitude: 12.9346,
-    longitude: 77.6139,
+    address: "Paundha Road, Bidholi, Dehradun",
+    formattedAddress: "Paundha Road, Bidholi, Dehradun, Uttarakhand 248007, India",
+    latitude: 30.4140,
+    longitude: 77.9695,
+    category: PropertyCategory.STUDIO,
+    price: 13500,
+    beds: 1,
+    baths: 1,
+    sqft: 450,
+    amenities: ["Mountain View", "Kitchenette", "Balcony", "Power Backup", "High-Speed WiFi", "Two Wheeler Parking"],
+    furnishing: Furnishing.FURNISHED,
+    premium: false
+  },
+  {
+    slug: "prem-nagar-student-haven-pg",
+    code: "103_PG",
+    title: "Prem Nagar Scholar Haven (Twin Sharing PG)",
+    description: "Modern student co-living PG right in the heart of Prem Nagar market. Direct connectivity to college buses, walking distance to grocery stores, gym, and cafes.",
+    city: "Dehradun",
+    neighborhood: "Prem Nagar",
+    locality: "Prem Nagar",
+    state: "Uttarakhand",
+    country: "India",
+    address: "Main Market Road, Prem Nagar, Dehradun",
+    formattedAddress: "Prem Nagar, Dehradun, Uttarakhand 248007, India",
+    latitude: 30.3392,
+    longitude: 77.9548,
     category: PropertyCategory.PG,
-    price: 18500,
+    price: 7500,
+    beds: 1,
+    baths: 1,
+    sqft: 240,
+    amenities: ["Meals Included", "Wifi", "RO Water", "Weekly Housekeeping", "Attached Washroom", "Geyser"],
+    furnishing: Furnishing.FURNISHED,
+    premium: true
+  },
+  {
+    slug: "doon-valley-2bhk-flat-prem-nagar",
+    code: "104_APT",
+    title: "Doon Valley 2BHK Student Flat",
+    description: "Spacious semi-furnished 2BHK flat ideal for a group of 3-4 college students sharing rent. Close to JBIT & BFIT campuses with easy transport access.",
+    city: "Dehradun",
+    neighborhood: "Suddhowala",
+    locality: "Suddhowala",
+    state: "Uttarakhand",
+    country: "India",
+    address: "Chakrata Highway, Suddhowala, Dehradun",
+    formattedAddress: "Suddhowala, Dehradun, Uttarakhand 248007, India",
+    latitude: 30.3445,
+    longitude: 77.9460,
+    category: PropertyCategory.APARTMENT,
+    price: 16000,
+    beds: 2,
+    baths: 2,
+    sqft: 980,
+    amenities: ["Car Parking", "Balcony", "Kitchen Cabinets", "Geyser", "24x7 Water", "Inverter Wiring"],
+    furnishing: Furnishing.SEMI_FURNISHED,
+    premium: false
+  },
+  {
+    slug: "graphic-heights-coliving-clement-town",
+    code: "105_PG",
+    title: "Graphic Heights Premium Student PG",
+    description: "Luxury student accommodation 200m from Graphic Era University. AC rooms, air cooler options, high-speed fiber, gym corner, and hygienic multi-cuisine food.",
+    city: "Dehradun",
+    neighborhood: "Clement Town",
+    locality: "Clement Town",
+    state: "Uttarakhand",
+    country: "India",
+    address: "Near Subhash Nagar, Clement Town, Dehradun",
+    formattedAddress: "Clement Town, Dehradun, Uttarakhand 248002, India",
+    latitude: 30.2690,
+    longitude: 78.0140,
+    category: PropertyCategory.PG,
+    price: 9500,
     beds: 1,
     baths: 1,
     sqft: 260,
-    amenities: ["Meals", "Wifi", "Laundry", "Housekeeping", "Security", "Common lounge"],
+    amenities: ["AC", "Nutritious Meals", "Gym", "High-Speed WiFi", "Lounge Area", "Biometric Entry"],
+    furnishing: Furnishing.FURNISHED,
+    premium: true
+  },
+  {
+    slug: "subhash-nagar-1bhk-clement-town",
+    code: "106_APT",
+    title: "Subhash Nagar 1BHK Student Apartment",
+    description: "Furnished 1BHK flat for students or young working professionals. 5 minutes walk to Graphic Era campus, quiet neighborhood with safe gated entry.",
+    city: "Dehradun",
+    neighborhood: "Clement Town",
+    locality: "Clement Town",
+    state: "Uttarakhand",
+    country: "India",
+    address: "Lane 3, Subhash Nagar, Clement Town, Dehradun",
+    formattedAddress: "Subhash Nagar, Clement Town, Dehradun, Uttarakhand 248002, India",
+    latitude: 30.2715,
+    longitude: 78.0118,
+    category: PropertyCategory.APARTMENT,
+    price: 12500,
+    beds: 1,
+    baths: 1,
+    sqft: 520,
+    amenities: ["Refrigerator", "RO Purifier", "Balcony", "Gated Security", "WiFi", "Two Wheeler Parking"],
     furnishing: Furnishing.FURNISHED,
     premium: false
   },
   {
-    slug: "gurugram-golf-course-villa",
-    code: "103_VLA",
-    title: "Golf Course Villa",
-    description: "A private villa with landscaped garden, staff quarters, home office, and direct access to Golf Course Road.",
-    city: "Gurugram",
-    neighborhood: "DLF Phase 5",
-    locality: "DLF Phase 5",
-    state: "Haryana",
+    slug: "dit-foothills-residency-makkawala",
+    code: "107_PG",
+    title: "DIT Foothills Student Residence",
+    description: "Serene hillside PG located just 300m from DIT University campus. Spectacular Mussoorie view, quiet study hours, 3 buffet meals, and weekly room cleaning.",
+    city: "Dehradun",
+    neighborhood: "Makkawala",
+    locality: "Makkawala",
+    state: "Uttarakhand",
     country: "India",
-    address: "Golf Course Road, Gurugram",
-    formattedAddress: "Golf Course Road, DLF Phase 5, Gurugram, Haryana, India",
-    latitude: 28.4355,
-    longitude: 77.1054,
-    category: PropertyCategory.VILLA,
-    price: 320000,
-    beds: 4,
-    baths: 4,
-    sqft: 4200,
-    amenities: ["Garden", "Clubhouse", "Two-car garage", "Staff room", "Home office", "Security"],
+    address: "Mussoorie Diversion Road, Makkawala, Dehradun",
+    formattedAddress: "Makkawala, Dehradun, Uttarakhand 248009, India",
+    latitude: 30.4015,
+    longitude: 78.0725,
+    category: PropertyCategory.PG,
+    price: 8500,
+    beds: 1,
+    baths: 1,
+    sqft: 230,
+    amenities: ["Hill View", "Buffet Meals", "Fast WiFi", "Power Backup", "Study Tables", "Security Guard"],
+    furnishing: Furnishing.FURNISHED,
+    premium: true
+  },
+  {
+    slug: "pacific-hills-2bhk-rajpur-road",
+    code: "108_APT",
+    title: "Pacific Hills 2BHK View Apartment",
+    description: "Modern 2BHK apartment situated near Mussoorie Diversion on Rajpur Road. Ideal for senior students or faculty looking for comfortable living close to cafes and DIT.",
+    city: "Dehradun",
+    neighborhood: "Rajpur Road",
+    locality: "Rajpur Road",
+    state: "Uttarakhand",
+    country: "India",
+    address: "Near Pacific Mall, Rajpur Road, Dehradun",
+    formattedAddress: "Rajpur Road, Dehradun, Uttarakhand 248001, India",
+    latitude: 30.3620,
+    longitude: 78.0690,
+    category: PropertyCategory.APARTMENT,
+    price: 22000,
+    beds: 2,
+    baths: 2,
+    sqft: 1100,
+    amenities: ["Mountain View", "Lift", "Covered Parking", "Modular Kitchen", "Clubhouse", "24x7 Security"],
     furnishing: Furnishing.SEMI_FURNISHED,
     premium: true
   },
   {
-    slug: "pune-baner-studio",
-    code: "104_STD",
-    title: "Baner Work Studio",
-    description: "Compact studio apartment for a solo resident, close to Balewadi High Street and major tech offices.",
-    city: "Pune",
-    neighborhood: "Baner",
-    locality: "Baner",
-    state: "Maharashtra",
+    slug: "doon-central-coliving-dbs",
+    code: "109_PG",
+    title: "Doon Central Co-living (Near DBS)",
+    description: "Central Dehradun co-living space 5 minutes from Doon Business School. Includes dedicated silent library room, high-speed fiber, healthy home food, and gym.",
+    city: "Dehradun",
+    neighborhood: "Chakrata Road",
+    locality: "Chakrata Road",
+    state: "Uttarakhand",
     country: "India",
-    address: "Baner Road, Pune",
-    formattedAddress: "Baner Road, Pune, Maharashtra, India",
-    latitude: 18.559,
-    longitude: 73.7868,
-    category: PropertyCategory.STUDIO,
-    price: 32000,
+    address: "Chakrata Road, Near DBS, Dehradun",
+    formattedAddress: "Chakrata Road, Dehradun, Uttarakhand 248001, India",
+    latitude: 30.3175,
+    longitude: 78.0295,
+    category: PropertyCategory.PG,
+    price: 8000,
     beds: 1,
     baths: 1,
-    sqft: 480,
-    amenities: ["Lift", "Wifi ready", "Parking", "Balcony", "Gated society"],
-    furnishing: Furnishing.SEMI_FURNISHED,
+    sqft: 250,
+    amenities: ["Library Room", "Home Meals", "AC", "WiFi", "Laundry", "Daily Housekeeping"],
+    furnishing: Furnishing.FURNISHED,
     premium: false
   },
   {
-    slug: "delhi-defence-colony-floor",
-    code: "105_APT",
-    title: "Defence Colony Floor",
-    description: "Independent builder floor with generous living spaces, servant room, and quick access to South Delhi markets.",
-    city: "New Delhi",
-    neighborhood: "Defence Colony",
-    locality: "Defence Colony",
-    state: "Delhi",
+    slug: "greenwood-residency-selaqui",
+    code: "110_PG",
+    title: "Greenwood Student Residency (Near Tula's)",
+    description: "Budget-friendly and spacious student hostel near Tula's Institute and Selaqui Pharma Hub. Regular transport, warm food, sports lawn, and power backup.",
+    city: "Dehradun",
+    neighborhood: "Selaqui",
+    locality: "Selaqui",
+    state: "Uttarakhand",
     country: "India",
-    address: "Defence Colony, New Delhi",
-    formattedAddress: "Defence Colony, New Delhi, Delhi, India",
-    latitude: 28.5734,
-    longitude: 77.2307,
-    category: PropertyCategory.APARTMENT,
-    price: 210000,
-    beds: 3,
-    baths: 3,
-    sqft: 2200,
-    amenities: ["Independent floor", "Servant room", "Parking", "Private lift", "Park nearby"],
-    furnishing: Furnishing.UNFURNISHED,
-    premium: true
-  },
-  {
-    slug: "hyderabad-hitech-city-loft",
-    code: "106_LFT",
-    title: "HITEC City Co-living Loft",
-    description: "Design-forward co-living loft with private rooms, shared studio kitchen, event lounge, and metro access.",
-    city: "Hyderabad",
-    neighborhood: "HITEC City",
-    locality: "HITEC City",
-    state: "Telangana",
-    country: "India",
-    address: "Madhapur, Hyderabad",
-    formattedAddress: "Madhapur, HITEC City, Hyderabad, Telangana, India",
-    latitude: 17.4483,
-    longitude: 78.3915,
-    category: PropertyCategory.LOFT,
-    price: 28500,
+    address: "Dhoolkot Road, Selaqui, Dehradun",
+    formattedAddress: "Selaqui, Dehradun, Uttarakhand 248011, India",
+    latitude: 30.3820,
+    longitude: 77.8835,
+    category: PropertyCategory.PG,
+    price: 7000,
     beds: 1,
     baths: 1,
-    sqft: 340,
-    amenities: ["Co-working", "Wifi", "Events", "Housekeeping", "Metro nearby", "Cafe"],
+    sqft: 240,
+    amenities: ["Nutritious Food", "Sports Lawn", "Power Backup", "WiFi", "Geyser", "CCTV"],
     furnishing: Furnishing.FURNISHED,
     premium: false
   }
@@ -210,13 +314,26 @@ async function main() {
     role: UserRole.ADMIN,
     passwordHash,
     phone: "+91 98765 10000",
-    bio: "Roomzly operations admin."
+    bio: "Roomzly Dehradun student operations admin."
   });
 
   const ownerUsers = await Promise.all(owners.map((owner) => upsertUser({ ...owner, role: UserRole.OWNER, passwordHash })));
   const residentUsers = await Promise.all(
     residents.map((resident) => upsertUser({ ...resident, role: UserRole.RESIDENT, passwordHash }))
   );
+
+  // Clean up previous non-Dehradun seed properties if they exist
+  const oldSlugs = [
+    "bandra-skyline-apartment",
+    "koramangala-managed-pg",
+    "gurugram-golf-course-villa",
+    "pune-baner-studio",
+    "delhi-defence-colony-floor",
+    "hyderabad-hitech-city-loft"
+  ];
+  await prisma.property.deleteMany({
+    where: { slug: { in: oldSlugs } }
+  }).catch(() => {});
 
   const seeded = [];
   for (const [index, property] of properties.entries()) {
@@ -226,19 +343,19 @@ async function main() {
       update: {
         ...property,
         ownerId: owner.id,
-        verified: index !== 1,
+        verified: true,
         active: true,
         premium: property.premium,
-        viewCount: 500 + index * 175
+        viewCount: 650 + index * 120
       },
       create: {
         ...property,
         ownerId: owner.id,
-        verified: index !== 1,
+        verified: true,
         active: true,
-        rating: 4.6 + index * 0.04,
-        reviewCount: 0,
-        viewCount: 500 + index * 175,
+        rating: 4.7 + (index % 3) * 0.1,
+        reviewCount: 4 + (index % 5),
+        viewCount: 650 + index * 120,
         images: {
           create: [0, 1, 2].map((offset) => ({
             url: imageUrls[(index + offset) % imageUrls.length]!,
@@ -260,13 +377,13 @@ async function main() {
         id: `seed-booking-${index + 1}`,
         propertyId: property.id,
         guestId: reviewer.id,
-        checkIn: new Date(`2026-07-${String(10 + index).padStart(2, "0")}T00:00:00.000Z`),
-        checkOut: new Date(`2026-07-${String(15 + index).padStart(2, "0")}T00:00:00.000Z`),
-        moveInDate: new Date(`2026-07-${String(10 + index).padStart(2, "0")}T00:00:00.000Z`),
+        checkIn: new Date(`2026-09-${String(10 + (index % 10)).padStart(2, "0")}T00:00:00.000Z`),
+        checkOut: new Date(`2026-09-${String(15 + (index % 10)).padStart(2, "0")}T00:00:00.000Z`),
+        moveInDate: new Date(`2026-09-${String(10 + (index % 10)).padStart(2, "0")}T00:00:00.000Z`),
         nights: 5,
-        total: Number(property.price) * 5,
+        total: Number(property.price),
         status: index % 3 === 0 ? BookingStatus.PENDING : BookingStatus.CONFIRMED,
-        notes: "Seed booking"
+        notes: "Campus semester booking"
       }
     });
 
@@ -277,7 +394,7 @@ async function main() {
         propertyId: property.id,
         userId: reviewer.id,
         rating: 4 + (index % 2),
-        body: "Clean, responsive owner, and the listing details matched the visit experience."
+        body: "Great location for college students. Fast wifi, clean washroom, and food quality is actually homestyle."
       }
     });
   }
@@ -299,7 +416,7 @@ async function main() {
         propertyId: seeded[1]!.id,
         reportedUserId: seeded[1]!.ownerId,
         type: "FAKE_LISTING",
-        description: "Demo report: rent looks unusually low for this area and should be checked."
+        description: "Demo report: rent looks unusually low for this area and should be verified."
       }
     })
   ]);
@@ -333,8 +450,8 @@ async function main() {
   if (seedMessageCount === 0) {
     await prisma.message.createMany({
       data: [
-        { threadId: thread.id, senderId: residentUsers[0]!.id, body: "Hi! Is parking included with the Bandra apartment?" },
-        { threadId: thread.id, senderId: ownerUsers[0]!.id, body: "Yes, one reserved parking spot is included." }
+        { threadId: thread.id, senderId: residentUsers[0]!.id, body: "Hi Vikram ji! Is 3-times food and high-speed wifi included with the Bidholi PG?" },
+        { threadId: thread.id, senderId: ownerUsers[0]!.id, body: "Yes Aman, all 3 buffet meals, high-speed fiber wifi, and power backup are fully included in the monthly rent." }
       ]
     });
   }
