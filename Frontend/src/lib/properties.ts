@@ -15,6 +15,7 @@ export interface PropertyImage {
 export interface PropertyCollegeMatch {
   collegeSlug: string;
   collegeName: string;
+  name?: string;
   shortName: string;
   areaName: string;
   locality?: string;

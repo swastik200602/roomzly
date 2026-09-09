@@ -27,6 +27,7 @@ function LoginPage() {
   const showPremiumLoading = usePremiumLoading((s) => s.show);
   const hidePremiumLoading = usePremiumLoading((s) => s.hideAfterMinimum);
   const facetsQuery = useQuery({ queryKey: ["properties", "facets"], queryFn: propertiesApi.facets });
+  const facets = facetsQuery.data;
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const [attemptedEmail, setAttemptedEmail] = useState("");
@@ -45,7 +46,7 @@ function LoginPage() {
     onError: (error) => {
       const msg = error instanceof ApiError ? error.message : "Sign in failed";
       if (
-        (error instanceof ApiError && error.status === 403) ||
+        (error instanceof ApiError && (error.code === "EMAIL_NOT_VERIFIED" || error.code === "FORBIDDEN")) ||
         msg.toLowerCase().includes("verify your email")
       ) {
         setUnverifiedEmail(attemptedEmail);
