@@ -150,7 +150,7 @@ function PropertyCardComponent({ property: p }: Props) {
               <div className="inline-flex max-w-full items-center gap-2 border border-white/15 bg-background/90 px-2.5 py-1.5 text-[11px] font-medium text-foreground backdrop-blur-sm">
                 <GraduationCap className="size-3.5 shrink-0 text-accent" />
                 <span className="truncate">
-                  {primaryCollege.shortName} - {primaryCollege.distanceKm} km from campus
+                  {primaryCollege.shortName} - {primaryCollege.distanceKm < 1 ? `${Math.round(primaryCollege.distanceKm * 1000)} m` : `${primaryCollege.distanceKm} km`} from campus
                 </span>
               </div>
             </div>

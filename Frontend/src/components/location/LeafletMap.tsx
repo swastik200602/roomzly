@@ -5,8 +5,9 @@ import { ArrowRight, Crosshair, LayoutGrid, LoaderCircle, MapPin, Search, Shield
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ProgressiveImage } from "@/components/property/ProgressiveImage";
+import { COLLEGES } from "@/lib/college-discovery";
 import { formatCurrency } from "@/lib/currency";
-import type { Property } from "@/lib/properties";
+import type { Property, PropertyCollegeMatch } from "@/lib/properties";
 import { cn } from "@/lib/utils";
 
 type LocationValue = {
@@ -91,6 +92,30 @@ function createPropertyPinIcon(leaflet: LeafletModule, property: Property, isAct
     iconSize: [80, height + 16],
     iconAnchor: [40, height + 14],
     popupAnchor: [0, -(height + 14)],
+  });
+}
+
+function createCollegePinIcon(leaflet: LeafletModule, collegeName: string) {
+  const html = `
+    <div class="roomzly-college-pin" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;user-select:none;transform:translate3d(0,0,0);">
+      <div style="background:#059669;color:#ffffff;font-size:10px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;padding:2px 8px;border-radius:9999px;border:1.5px solid #ffffff;box-shadow:0 4px 10px rgba(0,0,0,0.45);white-space:nowrap;margin-bottom:2px;display:flex;align-items:center;gap:4px;">
+        <span>🎓</span>
+        <span>${collegeName}</span>
+      </div>
+      <svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,0.4));">
+        <path d="M12 31C12 31 22 19 22 11C22 5.47715 17.5228 1 12 1C6.47715 1 2 5.47715 2 11C2 19 12 31 12 31Z" fill="#059669" stroke="#ffffff" stroke-width="1.5"/>
+        <circle cx="12" cy="11" r="5" fill="#ffffff"/>
+        <circle cx="12" cy="11" r="2.5" fill="#059669"/>
+      </svg>
+    </div>
+  `;
+
+  return leaflet.divIcon({
+    className: "roomzly-college-marker",
+    html,
+    iconSize: [120, 52],
+    iconAnchor: [60, 50],
+    popupAnchor: [0, -50],
   });
 }
 
@@ -349,11 +374,13 @@ export function PropertyLocationMap({
   latitude,
   longitude,
   title,
+  primaryCollege,
   className,
 }: {
   latitude?: number | null;
   longitude?: number | null;
   title: string;
+  primaryCollege?: PropertyCollegeMatch | null;
   className?: string;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -365,13 +392,70 @@ export function PropertyLocationMap({
     void loadLeaflet().then((leaflet) => {
       if (cancelled || !containerRef.current) return;
       map = initMap(leaflet, containerRef.current, [latitude, longitude], 15);
-      leaflet.marker([latitude, longitude], { icon: createSimplePinIcon(leaflet, true) }).addTo(map).bindPopup(title);
+      leaflet
+        .marker([latitude, longitude], { icon: createSimplePinIcon(leaflet, true) })
+        .addTo(map)
+        .bindPopup(`<strong>${title}</strong><br/><span style="font-size:11px;color:#64748b;">Property Location</span>`);
+
+      if (primaryCollege?.latitude != null && primaryCollege?.longitude != null) {
+        const cLat = primaryCollege.latitude;
+        const cLng = primaryCollege.longitude;
+        const collegeMarker = leaflet
+          .marker([cLat, cLng], {
+            icon: createCollegePinIcon(leaflet, primaryCollege.shortName),
+            zIndexOffset: 300,
+          })
+          .addTo(map);
+
+        const distStr =
+          primaryCollege.distanceKm < 1
+            ? `${Math.round(primaryCollege.distanceKm * 1000)} m (${primaryCollege.distanceKm} km)`
+            : `${primaryCollege.distanceKm} km`;
+
+        collegeMarker.bindPopup(
+          `<div style="font-family:system-ui,-apple-system,sans-serif;padding:2px 4px;">` +
+            `<div style="font-weight:700;font-size:13px;color:#0f172a;">🎓 ${primaryCollege.name || primaryCollege.shortName}</div>` +
+            `<div style="font-size:11px;color:#059669;font-weight:600;margin-top:2px;">${distStr} to property</div>` +
+            `<div style="font-size:11px;color:#64748b;">~${primaryCollege.walkingMinutes} min walk</div>` +
+          `</div>`,
+        );
+
+        const polyline = leaflet
+          .polyline(
+            [
+              [latitude, longitude],
+              [cLat, cLng],
+            ],
+            {
+              color: "#2563eb",
+              weight: 3,
+              dashArray: "6, 8",
+              opacity: 0.85,
+            },
+          )
+          .addTo(map);
+
+        polyline.bindTooltip(
+          `🎓 ${primaryCollege.shortName}: ${distStr} • ~${primaryCollege.walkingMinutes} min walk`,
+          {
+            permanent: true,
+            direction: "center",
+            className: "roomzly-distance-tooltip",
+          },
+        );
+
+        const bounds = leaflet.latLngBounds([
+          [latitude, longitude],
+          [cLat, cLng],
+        ]);
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+      }
     });
     return () => {
       cancelled = true;
       map?.remove();
     };
-  }, [latitude, longitude, title]);
+  }, [latitude, longitude, title, primaryCollege]);
 
   if (latitude == null || longitude == null) {
     return (
@@ -389,6 +473,7 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
   const leafletRef = useRef<LeafletModule | null>(null);
   const mapRef = useRef<LeafletMapInstance | null>(null);
   const markerRefs = useRef<Map<string, LeafletMarkerInstance>>(new Map());
+  const collegeMarkerRefs = useRef<LeafletMarkerInstance[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isMapReady, setIsMapReady] = useState(false);
   const [isCardDismissed, setIsCardDismissed] = useState(false);
@@ -434,9 +519,43 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
       mapRef.current = null;
       leafletRef.current = null;
       markerRefs.current.clear();
+      collegeMarkerRefs.current = [];
       setIsMapReady(false);
     };
   }, []);
+
+  useEffect(() => {
+    const leaflet = leafletRef.current;
+    const map = mapRef.current;
+    if (!leaflet || !map || !isMapReady) return;
+
+    collegeMarkerRefs.current.forEach((m) => m.remove());
+    collegeMarkerRefs.current = [];
+
+    COLLEGES.forEach((college) => {
+      const marker = leaflet
+        .marker([college.latitude, college.longitude], {
+          icon: createCollegePinIcon(leaflet, college.shortName),
+          zIndexOffset: 250,
+        })
+        .addTo(map);
+
+      marker.bindPopup(
+        `<div style="font-family:system-ui,-apple-system,sans-serif;padding:2px 4px;">` +
+          `<div style="font-weight:700;font-size:13px;color:#0f172a;">🎓 ${college.name}</div>` +
+          `<div style="font-size:11px;color:#64748b;margin-top:2px;">${college.locality}, ${college.city}</div>` +
+          `<div style="font-size:10px;color:#059669;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:0.04em;">Campus Landmark</div>` +
+        `</div>`,
+      );
+
+      collegeMarkerRefs.current.push(marker);
+    });
+
+    return () => {
+      collegeMarkerRefs.current.forEach((m) => m.remove());
+      collegeMarkerRefs.current = [];
+    };
+  }, [isMapReady]);
 
   useEffect(() => {
     const leaflet = leafletRef.current;

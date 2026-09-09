@@ -19,6 +19,9 @@ export type PropertyCollegeMatch = {
   collegeName: string;
   shortName: string;
   areaName: string;
+  locality: string;
+  latitude: number;
+  longitude: number;
   distanceKm: number;
   walkingMinutes: number;
   drivingMinutes: number;
@@ -78,6 +81,32 @@ export const colleges: CollegeRecord[] = [
     longitude: 78.0716,
     searchRadiusKm: 5,
     aliases: ["dit", "dit university", "dehradun institute of technology"],
+  },
+  {
+    slug: "uttaranchal-university",
+    name: "Uttaranchal University",
+    shortName: "Uttaranchal Univ",
+    city: "Dehradun",
+    state: "Uttarakhand",
+    areaName: "Prem Nagar",
+    locality: "Prem Nagar",
+    latitude: 30.3392,
+    longitude: 77.9540,
+    searchRadiusKm: 5,
+    aliases: ["uttaranchal", "uttaranchal university", "uu", "prem nagar campus"],
+  },
+  {
+    slug: "upes-kandoli",
+    name: "UPES (Kandoli Campus)",
+    shortName: "UPES Kandoli",
+    city: "Dehradun",
+    state: "Uttarakhand",
+    areaName: "Kandoli",
+    locality: "Kandoli",
+    latitude: 30.4035,
+    longitude: 77.9712,
+    searchRadiusKm: 5,
+    aliases: ["kandoli", "upes kandoli", "school of law", "school of design"],
   },
   {
     slug: "jbit",
@@ -277,6 +306,9 @@ export function collegeMatchesForProperty(
         collegeName: college.name,
         shortName: college.shortName,
         areaName: college.areaName,
+        locality: college.locality,
+        latitude: college.latitude,
+        longitude: college.longitude,
         distanceKm: Number(distanceKm.toFixed(distanceKm < 1 ? 2 : 1)),
         walkingMinutes: walkingMinutes(distanceKm),
         drivingMinutes: drivingMinutes(distanceKm),

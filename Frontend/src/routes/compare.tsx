@@ -27,7 +27,11 @@ const ROWS: Array<{ label: string; value: (property: Property) => string }> = [
   {
     label: "Campus distance",
     value: (property) =>
-      property.primaryCollege ? `${property.primaryCollege.distanceKm} km from ${property.primaryCollege.shortName}` : "Not tagged yet",
+      property.primaryCollege
+        ? property.primaryCollege.distanceKm < 1
+          ? `${Math.round(property.primaryCollege.distanceKm * 1000)} m (${property.primaryCollege.distanceKm} km) from ${property.primaryCollege.shortName}`
+          : `${property.primaryCollege.distanceKm} km from ${property.primaryCollege.shortName}`
+        : "Not tagged yet",
   },
   {
     label: "Walking time",

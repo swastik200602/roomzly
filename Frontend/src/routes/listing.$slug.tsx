@@ -439,7 +439,10 @@ function ListingPage() {
           {p.primaryCollege && (
             <span className="inline-flex items-center gap-1.5">
               <GraduationCap className="size-3.5 text-accent shrink-0" />
-              {p.primaryCollege.distanceKm} km from {p.primaryCollege.shortName}
+              {p.primaryCollege.distanceKm < 1
+                ? `${Math.round(p.primaryCollege.distanceKm * 1000)} m (${p.primaryCollege.distanceKm} km)`
+                : `${p.primaryCollege.distanceKm} km`}{" "}
+              from {p.primaryCollege.name || p.primaryCollege.shortName}
             </span>
           )}
         </div>
@@ -850,6 +853,17 @@ function ListingPage() {
                         <Navigation className="size-3.5" />
                         Get directions
                       </a>
+                      {p.primaryCollege?.latitude != null && p.primaryCollege?.longitude != null && (
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&origin=${p.latitude},${p.longitude}&destination=${p.primaryCollege.latitude},${p.primaryCollege.longitude}&travelmode=walking`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="border border-border bg-surface hover:bg-surface-hi px-4 py-2.5 text-xs font-bold uppercase tracking-widest rounded-sm inline-flex items-center gap-2 transition-colors"
+                        >
+                          <GraduationCap className="size-3.5 text-accent" />
+                          Walk to {p.primaryCollege.shortName} ({p.primaryCollege.distanceKm < 1 ? `${Math.round(p.primaryCollege.distanceKm * 1000)} m` : `${p.primaryCollege.distanceKm} km`})
+                        </a>
+                      )}
                     </div>
                   </div>
                   <Suspense
@@ -859,7 +873,7 @@ function ListingPage() {
                       </div>
                     }
                   >
-                    <PropertyLocationMap latitude={p.latitude} longitude={p.longitude} title={p.title} />
+                    <PropertyLocationMap latitude={p.latitude} longitude={p.longitude} title={p.title} primaryCollege={p.primaryCollege} />
                   </Suspense>
                 </div>
               </TabsContent>
@@ -1006,7 +1020,10 @@ function ListingPage() {
                     {p.primaryCollege && (
                       <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground">
                         <GraduationCap className="size-3 text-accent" />
-                        {p.primaryCollege.distanceKm} km from {p.primaryCollege.shortName}
+                        {p.primaryCollege.distanceKm < 1
+                          ? `${Math.round(p.primaryCollege.distanceKm * 1000)} m (${p.primaryCollege.distanceKm} km)`
+                          : `${p.primaryCollege.distanceKm} km`}{" "}
+                        from {p.primaryCollege.shortName}
                       </p>
                     )}
                     {p.owner.phoneVerified && (

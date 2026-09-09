@@ -225,9 +225,26 @@
   }
 
   /* Custom Leaflet Pin marker reset */
-  .leaflet-div-icon.roomzly-pin-marker {
+  .leaflet-div-icon.roomzly-pin-marker,
+  .leaflet-div-icon.roomzly-college-marker {
     background: transparent !important;
     border: none !important;
+  }
+
+  .roomzly-distance-tooltip {
+    background: rgba(15, 23, 42, 0.92) !important;
+    color: #ffffff !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    font-family: system-ui, -apple-system, sans-serif !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+    padding: 3px 8px !important;
+    white-space: nowrap !important;
+  }
+  .roomzly-distance-tooltip::before {
+    display: none !important;
   }
 }
 

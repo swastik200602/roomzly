@@ -390,6 +390,9 @@ export const propertyService = {
         name: college.name,
         shortName: college.shortName,
         areaName: college.areaName,
+        locality: college.locality,
+        latitude: college.latitude,
+        longitude: college.longitude,
       })),
     };
   },

@@ -17,6 +17,9 @@ export interface PropertyCollegeMatch {
   collegeName: string;
   shortName: string;
   areaName: string;
+  locality?: string;
+  latitude?: number;
+  longitude?: number;
   distanceKm: number;
   walkingMinutes: number;
   drivingMinutes: number;
