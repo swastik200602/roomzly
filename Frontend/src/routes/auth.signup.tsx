@@ -25,16 +25,26 @@ function SignupPage() {
   const hidePremiumLoading = usePremiumLoading((s) => s.hideAfterMinimum);
   const [role, setRole] = useState<UserRole>("RESIDENT");
   const [verificationSentEmail, setVerificationSentEmail] = useState<string | null>(null);
+  const [verificationToken, setVerificationToken] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
 
   const signupMutation = useMutation({
     mutationFn: authApi.register,
     onMutate: () => {
-      showPremiumLoading("Sending verification link...");
+      showPremiumLoading("Creating account...");
     },
     onSuccess: (data) => {
       setVerificationSentEmail(data.email);
-      toast.success("Verification link sent! Please check your email to complete signup.");
+      if (data.verificationUrl) {
+        try {
+          const u = new URL(data.verificationUrl, window.location.origin);
+          const t = u.searchParams.get("token");
+          if (t) setVerificationToken(t);
+        } catch {
+          // fallback if url parse fails
+        }
+      }
+      toast.success("Account created! Please verify your email to continue.");
       hidePremiumLoading();
     },
     onError: (error) => {
@@ -179,6 +189,16 @@ function SignupPage() {
               </div>
 
               <div className="pt-4 border-t border-border space-y-3">
+                {verificationToken && (
+                  <Link
+                    to="/auth/verify-email"
+                    search={{ token: verificationToken }}
+                    className="w-full bg-accent text-accent-foreground hover:bg-accent/90 py-2.5 text-xs font-bold uppercase tracking-widest rounded-sm transition-all inline-flex items-center justify-center gap-2 shadow-sm text-center"
+                  >
+                    Click to Verify &amp; Activate &rarr;
+                  </Link>
+                )}
+
                 <button
                   type="button"
                   onClick={handleResend}

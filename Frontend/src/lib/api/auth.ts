@@ -42,6 +42,7 @@ export type RegisterResponse = {
   requiresEmailVerification: boolean;
   email: string;
   message: string;
+  verificationUrl?: string;
 };
 
 export const authApi = {
@@ -115,7 +116,7 @@ export const authApi = {
   },
 
   resendVerification(payload: { email: string }) {
-    return apiRequest<{ accepted?: boolean; alreadyVerified?: boolean; message: string }>("/auth/resend-verification", {
+    return apiRequest<{ accepted?: boolean; alreadyVerified?: boolean; message: string; verificationUrl?: string }>("/auth/resend-verification", {
       method: "POST",
       body: payload,
     });

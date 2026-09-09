@@ -11,6 +11,7 @@ import { safeCacheDelete, safeCacheGet, safeCacheSet } from "@/lib/redis.js";
 import { adminAuditService, type AuditRequestContext } from "@/modules/admin/admin-audit.service.js";
 import type { GoogleAuthInput, LoginInput, RegisterInput } from "@/schemas/auth.schema.js";
 import { verifyGoogleCredential } from "@/modules/auth/google-oauth.js";
+import { logger } from "@/lib/logger.js";
 
 const accessTtl = "15m";
 const refreshMs = 7 * 24 * 60 * 60 * 1000;
@@ -152,12 +153,15 @@ export const authService = {
 
     const verifyUrl = new URL("/auth/verify-email", env.FRONTEND_URL);
     verifyUrl.searchParams.set("token", token);
-    await sendVerificationEmail(user.email, verifyUrl.toString(), user.firstName);
+    void sendVerificationEmail(user.email, verifyUrl.toString(), user.firstName).catch((err) => {
+      logger.warn({ err, email: user.email }, "Verification email delivery failed in background");
+    });
 
     return {
       requiresEmailVerification: true,
       email: user.email,
-      message: "Please check your inbox. A verification link has been sent to activate your account."
+      message: "Please check your inbox. A verification link has been sent to activate your account.",
+      verificationUrl: verifyUrl.toString()
     };
   },
 
@@ -203,9 +207,15 @@ export const authService = {
 
     const verifyUrl = new URL("/auth/verify-email", env.FRONTEND_URL);
     verifyUrl.searchParams.set("token", token);
-    await sendVerificationEmail(user.email, verifyUrl.toString(), user.firstName);
+    void sendVerificationEmail(user.email, verifyUrl.toString(), user.firstName).catch((err) => {
+      logger.warn({ err, email: user.email }, "Verification email resend failed in background");
+    });
 
-    return { accepted: true, message: "A new verification link has been sent to your email." };
+    return {
+      accepted: true,
+      message: "A new verification link has been sent to your email.",
+      verificationUrl: verifyUrl.toString()
+    };
   },
 
   async login(input: LoginInput, res: Response, audit?: AuditRequestContext) {
