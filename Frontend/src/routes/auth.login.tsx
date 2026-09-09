@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Mail, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
 
 import p1 from "@/assets/property-1.jpg";
 import p3 from "@/assets/property-3.jpg";
@@ -13,6 +14,7 @@ import { useAuth } from "@/stores/auth";
 import { usePremiumLoading } from "@/stores/loading";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { ActionButtonContent } from "@/components/ui/action-feedback";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/auth/login")({
   head: () => ({ meta: [{ title: "Sign in - Roomzly" }] }),
@@ -25,7 +27,10 @@ function LoginPage() {
   const showPremiumLoading = usePremiumLoading((s) => s.show);
   const hidePremiumLoading = usePremiumLoading((s) => s.hideAfterMinimum);
   const facetsQuery = useQuery({ queryKey: ["properties", "facets"], queryFn: propertiesApi.facets });
-  const facets = facetsQuery.data;
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
+  const [attemptedEmail, setAttemptedEmail] = useState("");
+
   const loginMutation = useMutation({
     mutationFn: authApi.login,
     onMutate: () => {
@@ -38,17 +43,40 @@ function LoginPage() {
       hidePremiumLoading();
     },
     onError: (error) => {
-      toast.error(error instanceof ApiError ? error.message : "Sign in failed");
+      const msg = error instanceof ApiError ? error.message : "Sign in failed";
+      if (
+        (error instanceof ApiError && error.status === 403) ||
+        msg.toLowerCase().includes("verify your email")
+      ) {
+        setUnverifiedEmail(attemptedEmail);
+      }
+      toast.error(msg);
       hidePremiumLoading();
     },
   });
 
+  const handleResend = async () => {
+    if (!unverifiedEmail || resending) return;
+    setResending(true);
+    try {
+      const res = await authApi.resendVerification({ email: unverifiedEmail });
+      toast.success(res.message || "A new verification link has been sent to your email!");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to resend verification email");
+    } finally {
+      setResending(false);
+    }
+  };
+
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const email = String(form.get("email") ?? "").trim();
+    const password = String(form.get("password") ?? "");
+    setAttemptedEmail(email);
     loginMutation.mutate({
-      email: String(form.get("email") ?? ""),
-      password: String(form.get("password") ?? ""),
+      email,
+      password,
     });
   };
 
@@ -108,6 +136,27 @@ function LoginPage() {
           <p className="text-sm text-white/45 mb-7 light:text-neutral-500">
             Find and manage verified student PGs & rentals.
           </p>
+
+          {unverifiedEmail && (
+            <div className="mb-5 border border-amber-500/30 bg-amber-500/10 p-3.5 rounded-sm text-xs space-y-2">
+              <div className="flex items-center gap-2 text-amber-400 font-semibold">
+                <Mail className="size-4 shrink-0" />
+                <span>Email verification required</span>
+              </div>
+              <p className="text-white/70 light:text-neutral-600 leading-relaxed">
+                Please check your inbox or spam folder for the verification link sent to <strong>{unverifiedEmail}</strong>.
+              </p>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resending}
+                className="text-accent underline-offset-2 hover:underline font-mono text-[11px] uppercase tracking-wider inline-flex items-center gap-1.5 disabled:opacity-50 pt-1"
+              >
+                <RefreshCw className={cn("size-3", resending && "animate-spin")} />
+                {resending ? "Sending link..." : "Resend verification email"}
+              </button>
+            </div>
+          )}
 
           <form className="space-y-4" onSubmit={onSubmit}>
             <div>

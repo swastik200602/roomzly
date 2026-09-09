@@ -41,7 +41,17 @@ export const verifyPhoneSchema = z.object({
   phoneNumber: z.string().trim().min(8).max(20)
 });
 
+export const verifyEmailSchema = z.object({
+  token: z.string().min(32)
+});
+
+export const resendVerificationSchema = z.object({
+  email: z.string().email().toLowerCase()
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;
 export type VerifyPhoneInput = z.infer<typeof verifyPhoneSchema>;
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;

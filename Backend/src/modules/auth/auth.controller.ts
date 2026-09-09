@@ -3,7 +3,7 @@ import { created, ok } from "@/lib/api-response.js";
 import { env } from "@/config/env.js";
 import { auditContextFromRequest } from "@/modules/admin/admin-audit.service.js";
 import { authService } from "@/modules/auth/auth.service.js";
-import type { GoogleAuthInput, LoginInput, RegisterInput, VerifyPhoneInput } from "@/schemas/auth.schema.js";
+import type { GoogleAuthInput, LoginInput, RegisterInput, ResendVerificationInput, VerifyEmailInput, VerifyPhoneInput } from "@/schemas/auth.schema.js";
 
 export const authController = {
   async config(_req: Request, res: Response) {
@@ -14,7 +14,17 @@ export const authController = {
   },
 
   async register(req: Request, res: Response) {
-    return created(res, await authService.register(req.body as RegisterInput, res));
+    return created(res, await authService.register(req.body as RegisterInput));
+  },
+
+  async verifyEmail(req: Request, res: Response) {
+    const body = req.body as VerifyEmailInput;
+    return ok(res, await authService.verifyEmail(body.token, res));
+  },
+
+  async resendVerification(req: Request, res: Response) {
+    const body = req.body as ResendVerificationInput;
+    return ok(res, await authService.resendVerification(body.email));
   },
 
   async login(req: Request, res: Response) {

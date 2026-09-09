@@ -42,6 +42,7 @@ import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard.analy
 import { Route as DashboardAdminRouteImport } from './routes/dashboard.admin'
 import { Route as DashboardAddPropertyRouteImport } from './routes/dashboard.add-property'
 import { Route as CollegesCollegeSlugRouteImport } from './routes/colleges.$collegeSlug'
+import { Route as AuthVerifyEmailRouteImport } from './routes/auth.verify-email'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
@@ -213,6 +214,11 @@ const CollegesCollegeSlugRoute = CollegesCollegeSlugRouteImport.update({
   path: '/colleges/$collegeSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
+  id: '/auth/verify-email',
+  path: '/auth/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/auth/signup',
   path: '/auth/signup',
@@ -267,6 +273,7 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/colleges/$collegeSlug': typeof CollegesCollegeSlugRoute
   '/dashboard/add-property': typeof DashboardAddPropertyRoute
   '/dashboard/admin': typeof DashboardAdminRoute
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/colleges/$collegeSlug': typeof CollegesCollegeSlugRoute
   '/dashboard/add-property': typeof DashboardAddPropertyRoute
   '/dashboard/admin': typeof DashboardAdminRoute
@@ -347,6 +355,7 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/colleges/$collegeSlug': typeof CollegesCollegeSlugRoute
   '/dashboard/add-property': typeof DashboardAddPropertyRoute
   '/dashboard/admin': typeof DashboardAdminRoute
@@ -389,6 +398,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/signup'
+    | '/auth/verify-email'
     | '/colleges/$collegeSlug'
     | '/dashboard/add-property'
     | '/dashboard/admin'
@@ -428,6 +438,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/signup'
+    | '/auth/verify-email'
     | '/colleges/$collegeSlug'
     | '/dashboard/add-property'
     | '/dashboard/admin'
@@ -468,6 +479,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/signup'
+    | '/auth/verify-email'
     | '/colleges/$collegeSlug'
     | '/dashboard/add-property'
     | '/dashboard/admin'
@@ -509,6 +521,7 @@ export interface RootRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
   CollegesCollegeSlugRoute: typeof CollegesCollegeSlugRoute
   ListingSlugRoute: typeof ListingSlugRoute
 }
@@ -746,6 +759,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollegesCollegeSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/verify-email': {
+      id: '/auth/verify-email'
+      path: '/auth/verify-email'
+      fullPath: '/auth/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/signup': {
       id: '/auth/signup'
       path: '/auth/signup'
@@ -840,6 +860,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSignupRoute: AuthSignupRoute,
+  AuthVerifyEmailRoute: AuthVerifyEmailRoute,
   CollegesCollegeSlugRoute: CollegesCollegeSlugRoute,
   ListingSlugRoute: ListingSlugRoute,
 }

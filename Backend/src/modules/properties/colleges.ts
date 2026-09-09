@@ -110,16 +110,16 @@ export const colleges: CollegeRecord[] = [
   },
   {
     slug: "jbit",
-    name: "JBIT",
+    name: "JBIT (JB Institute of Technology)",
     shortName: "JBIT",
     city: "Dehradun",
     state: "Uttarakhand",
-    areaName: "Suddhowala",
-    locality: "Suddhowala",
-    latitude: 30.347,
-    longitude: 77.9478,
-    searchRadiusKm: 4.5,
-    aliases: ["jbit", "jb institute of technology", "jbit dehradun"],
+    areaName: "Shankarpur",
+    locality: "Shankarpur",
+    latitude: 30.3788,
+    longitude: 77.8248,
+    searchRadiusKm: 6,
+    aliases: ["jbit", "jb institute of technology", "jbit dehradun", "shankarpur"],
   },
   {
     slug: "bfit",
@@ -136,16 +136,16 @@ export const colleges: CollegeRecord[] = [
   },
   {
     slug: "dbs",
-    name: "DBS",
+    name: "Doon Business School (DBS)",
     shortName: "DBS",
     city: "Dehradun",
     state: "Uttarakhand",
-    areaName: "Chakrata Road",
-    locality: "Chakrata Road",
-    latitude: 30.3168,
-    longitude: 78.0303,
-    searchRadiusKm: 4,
-    aliases: ["dbs", "doon business school", "dbs dehradun"],
+    areaName: "Selaqui",
+    locality: "Selaqui",
+    latitude: 30.3682,
+    longitude: 77.8653,
+    searchRadiusKm: 5,
+    aliases: ["dbs", "doon business school", "dbs dehradun", "selaqui campus"],
   },
   {
     slug: "tulas-institute",
@@ -153,10 +153,10 @@ export const colleges: CollegeRecord[] = [
     shortName: "Tula's",
     city: "Dehradun",
     state: "Uttarakhand",
-    areaName: "Selaqui",
+    areaName: "Dhoolkot",
     locality: "Selaqui",
-    latitude: 30.3815,
-    longitude: 77.8823,
+    latitude: 30.3606,
+    longitude: 77.8765,
     searchRadiusKm: 5,
     aliases: ["tulas", "tula's", "tulas institute", "tula's institute"],
   },
@@ -214,11 +214,15 @@ export function collegeBounds(college: CollegeRecord) {
 }
 
 function walkingMinutes(distanceKm: number) {
-  return Math.max(distanceKm < 0.4 ? 4 : 6, Math.round(distanceKm * 12));
+  if (distanceKm <= 0.1) return 1;
+  if (distanceKm <= 0.25) return 2;
+  if (distanceKm <= 0.4) return 4;
+  return Math.round(distanceKm * 12.5);
 }
 
 function drivingMinutes(distanceKm: number) {
-  return Math.max(3, Math.round(distanceKm * 4) + (distanceKm > 2 ? 2 : 0));
+  if (distanceKm <= 0.5) return 2;
+  return Math.max(3, Math.round(distanceKm * 2.3) + (distanceKm > 2 ? 3 : 0));
 }
 
 function baseStudentFriendlyScore(property: PropertyCollegeInput) {

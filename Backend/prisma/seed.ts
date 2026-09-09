@@ -115,7 +115,7 @@ const properties = [
     slug: "doon-valley-2bhk-flat-prem-nagar",
     code: "104_APT",
     title: "Doon Valley 2BHK Student Flat",
-    description: "Spacious semi-furnished 2BHK flat ideal for a group of 3-4 college students sharing rent. Close to JBIT & BFIT campuses with easy transport access.",
+    description: "Spacious semi-furnished 2BHK flat ideal for a group of 3-4 college students sharing rent. Close to BFIT campus with easy transport access.",
     city: "Dehradun",
     neighborhood: "Suddhowala",
     locality: "Suddhowala",
@@ -271,6 +271,29 @@ const properties = [
     amenities: ["Nutritious Food", "Sports Lawn", "Power Backup", "WiFi", "Geyser", "CCTV"],
     furnishing: Furnishing.FURNISHED,
     premium: false
+  },
+  {
+    slug: "shankarpur-scholar-residence-jbit",
+    code: "111_PG",
+    title: "Shankarpur Scholar Residency (Near JBIT)",
+    description: "Peaceful student hostel just 250m from JBIT campus entrance on Chakrata Road. Ideal for engineering students with nutritious food, study tables, and power backup.",
+    city: "Dehradun",
+    neighborhood: "Shankarpur",
+    locality: "Shankarpur",
+    state: "Uttarakhand",
+    country: "India",
+    address: "23 Milestone, Chakrata Road, Shankarpur, Dehradun",
+    formattedAddress: "Shankarpur, Dehradun, Uttarakhand 248197, India",
+    latitude: 30.3795,
+    longitude: 77.8265,
+    category: PropertyCategory.PG,
+    price: 6500,
+    beds: 1,
+    baths: 1,
+    sqft: 220,
+    amenities: ["Meals Included", "High-Speed WiFi", "Power Backup", "RO Water", "Study Room", "CCTV Security"],
+    furnishing: Furnishing.FURNISHED,
+    premium: true
   }
 ];
 

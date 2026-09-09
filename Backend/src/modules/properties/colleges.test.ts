@@ -79,4 +79,29 @@ describe("College Geospatial Intelligence", () => {
 
     expect(pgScore).toBeGreaterThan(villaScore);
   });
+
+  it("calculates accurate physical separation between Prem Nagar and JBIT (>12km) and matches Uttaranchal Univ as nearest (<150m)", () => {
+    // Prem Nagar Scholar Haven coordinates
+    const premNagarMatches = collegeMatchesForProperty({
+      latitude: 30.3392,
+      longitude: 77.9548,
+      category: PropertyCategory.PG,
+      amenities: ["Meals Included", "Wifi"],
+      price: 7500,
+      verified: true,
+      viewCount: 600,
+      reviewCount: 3,
+      ownerPhoneVerified: true,
+    });
+
+    // Closest college must be Uttaranchal University (Prem Nagar campus, ~80m away)
+    const uuMatch = premNagarMatches.find((m) => m.collegeSlug === "uttaranchal-university");
+    expect(uuMatch).toBeDefined();
+    expect(uuMatch?.distanceKm).toBeLessThan(0.15); // under 150 meters
+    expect(uuMatch?.walkingMinutes).toBeLessThanOrEqual(2);
+
+    // JBIT is located in Shankarpur (~13-15km away) and must NOT be in the nearby matches
+    const jbitMatch = premNagarMatches.find((m) => m.collegeSlug === "jbit");
+    expect(jbitMatch).toBeUndefined();
+  });
 });

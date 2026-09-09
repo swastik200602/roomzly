@@ -5,7 +5,7 @@ import type { CookieOptions, Response } from "express";
 import { AuthProvider, UserRole, type User } from "@prisma/client";
 import { env, isProduction } from "@/config/env.js";
 import { AppError, conflict, unauthorized } from "@/lib/app-error.js";
-import { sendPasswordResetEmail } from "@/lib/email.js";
+import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/email.js";
 import { prisma } from "@/lib/prisma.js";
 import { safeCacheDelete, safeCacheGet, safeCacheSet } from "@/lib/redis.js";
 import { adminAuditService, type AuditRequestContext } from "@/modules/admin/admin-audit.service.js";
@@ -95,33 +95,117 @@ function normalizePhoneNumber(phoneNumber: string): string {
 }
 
 export const authService = {
-  async register(input: RegisterInput, res: Response) {
+  async register(input: RegisterInput) {
     const existing = await prisma.user.findUnique({ where: { email: input.email } });
-    if (existing) throw conflict("Email is already registered");
+    if (existing && existing.verified) {
+      throw conflict("Email is already registered. Please sign in instead.");
+    }
+
     const phoneNumber = input.phoneNumber ? normalizePhoneNumber(input.phoneNumber) : null;
     if (phoneNumber) {
       const existingPhone = await prisma.user.findFirst({
-        where: { OR: [{ phoneNumber }, { phone: phoneNumber }] },
-        select: { id: true }
+        where: {
+          OR: [{ phoneNumber }, { phone: phoneNumber }],
+          NOT: existing ? { id: existing.id } : undefined
+        },
+        select: { id: true, verified: true }
       });
-      if (existingPhone) throw conflict("Phone number is already registered");
+      if (existingPhone && existingPhone.verified) {
+        throw conflict("Phone number is already registered to an existing account");
+      }
     }
 
     const passwordHash = await bcrypt.hash(input.password, 12);
-    const user = await prisma.user.create({
-      data: {
-        firstName: input.firstName,
-        lastName: input.lastName,
-        email: input.email,
-        passwordHash,
-        phone: phoneNumber,
-        phoneNumber,
-        phoneVerified: false,
-        role: input.role === UserRole.ADMIN ? UserRole.RESIDENT : input.role
-      }
+    let user: User;
+
+    if (existing && !existing.verified) {
+      user = await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          firstName: input.firstName,
+          lastName: input.lastName,
+          passwordHash,
+          phone: phoneNumber,
+          phoneNumber,
+          role: input.role === UserRole.ADMIN ? UserRole.RESIDENT : input.role
+        }
+      });
+    } else {
+      user = await prisma.user.create({
+        data: {
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
+          passwordHash,
+          phone: phoneNumber,
+          phoneNumber,
+          phoneVerified: false,
+          verified: false,
+          role: input.role === UserRole.ADMIN ? UserRole.RESIDENT : input.role
+        }
+      });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const tokenHash = hashToken(token);
+    await safeCacheSet(`verify-email:${tokenHash}`, user.id, 24 * 60 * 60);
+
+    const verifyUrl = new URL("/auth/verify-email", env.FRONTEND_URL);
+    verifyUrl.searchParams.set("token", token);
+    await sendVerificationEmail(user.email, verifyUrl.toString(), user.firstName);
+
+    return {
+      requiresEmailVerification: true,
+      email: user.email,
+      message: "Please check your inbox. A verification link has been sent to activate your account."
+    };
+  },
+
+  async verifyEmail(token: string, res: Response) {
+    const tokenHash = hashToken(token);
+    const userId = await safeCacheGet(`verify-email:${tokenHash}`);
+    if (!userId) {
+      throw unauthorized("Verification link has expired or is invalid. Please request a new one.");
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.active) {
+      throw unauthorized("User account not found or disabled.");
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { verified: true }
     });
 
-    return issueSession(user, res);
+    await safeCacheDelete(`verify-email:${tokenHash}`);
+
+    const session = await issueSession(updatedUser, res);
+    return {
+      verified: true,
+      ...session
+    };
+  },
+
+  async resendVerification(email: string) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return { accepted: true, message: "If this email is registered, a new verification link has been sent." };
+    }
+
+    if (user.verified) {
+      return { alreadyVerified: true, message: "Your email is already verified. You can log in directly." };
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const tokenHash = hashToken(token);
+    await safeCacheSet(`verify-email:${tokenHash}`, user.id, 24 * 60 * 60);
+
+    const verifyUrl = new URL("/auth/verify-email", env.FRONTEND_URL);
+    verifyUrl.searchParams.set("token", token);
+    await sendVerificationEmail(user.email, verifyUrl.toString(), user.firstName);
+
+    return { accepted: true, message: "A new verification link has been sent to your email." };
   },
 
   async login(input: LoginInput, res: Response, audit?: AuditRequestContext) {
@@ -130,6 +214,14 @@ export const authService = {
 
     const valid = await bcrypt.compare(input.password, user.passwordHash);
     if (!valid) throw unauthorized("Invalid email or password");
+
+    if (!user.verified) {
+      throw new AppError(
+        403,
+        "EMAIL_NOT_VERIFIED",
+        "Please verify your email address to complete signup. Check your inbox for the verification link."
+      );
+    }
 
     const session = await issueSession(user, res);
     if (user.role === UserRole.ADMIN) {
@@ -201,6 +293,7 @@ export const authService = {
           email,
           passwordHash: null,
           role,
+          verified: true,
           avatarUrl: payload.picture,
           accounts: {
             create: {

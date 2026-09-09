@@ -9,7 +9,9 @@ import {
   googleAuthSchema,
   loginSchema,
   registerSchema,
+  resendVerificationSchema,
   resetPasswordSchema,
+  verifyEmailSchema,
   verifyPhoneSchema
 } from "@/schemas/auth.schema.js";
 
@@ -18,9 +20,21 @@ export const authRouter = Router();
 authRouter.get("/config", asyncHandler(authController.config));
 authRouter.post(
   "/register",
-  rateLimitMiddleware("register", 3, 60),
+  rateLimitMiddleware("register", 5, 60),
   validate({ body: registerSchema }),
   asyncHandler(authController.register)
+);
+authRouter.post(
+  "/verify-email",
+  rateLimitMiddleware("verify-email", 10, 60),
+  validate({ body: verifyEmailSchema }),
+  asyncHandler(authController.verifyEmail)
+);
+authRouter.post(
+  "/resend-verification",
+  rateLimitMiddleware("resend-verification", 3, 60),
+  validate({ body: resendVerificationSchema }),
+  asyncHandler(authController.resendVerification)
 );
 authRouter.post(
   "/login",

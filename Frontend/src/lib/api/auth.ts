@@ -38,9 +38,15 @@ export type RegisterPayload = {
   role: UserRole;
 };
 
+export type RegisterResponse = {
+  requiresEmailVerification: boolean;
+  email: string;
+  message: string;
+};
+
 export const authApi = {
   register(payload: RegisterPayload) {
-    return apiRequest<AuthSession>("/auth/register", {
+    return apiRequest<RegisterResponse>("/auth/register", {
       method: "POST",
       body: payload,
     });
@@ -96,6 +102,20 @@ export const authApi = {
 
   verifyPhone(payload: { phoneNumber: string }) {
     return apiRequest<AuthUser>("/auth/verify-phone", {
+      method: "POST",
+      body: payload,
+    });
+  },
+
+  verifyEmail(payload: { token: string }) {
+    return apiRequest<AuthSession>("/auth/verify-email", {
+      method: "POST",
+      body: payload,
+    });
+  },
+
+  resendVerification(payload: { email: string }) {
+    return apiRequest<{ accepted?: boolean; alreadyVerified?: boolean; message: string }>("/auth/resend-verification", {
       method: "POST",
       body: payload,
     });
