@@ -1,3 +1,4 @@
+# Roomzly Automated Continuous Integration (CI) Pipeline
 name: CI
 
 on:

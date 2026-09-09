@@ -1,5 +1,7 @@
 {
-  "name": "tanstack_start_ts",
+  "name": "roomzly-frontend",
+  "version": "1.0.0",
+  "description": "Roomzly student housing & rental marketplace frontend (React 19 + TypeScript + Vite)",
   "private": true,
   "sideEffects": false,
   "type": "module",

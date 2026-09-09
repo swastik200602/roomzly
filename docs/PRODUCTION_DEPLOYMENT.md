@@ -1,4 +1,4 @@
-# Roomzly Production Deployment
+# Roomzly Production Deployment (v1.0.0)
 
 Roomzly production targets:
 

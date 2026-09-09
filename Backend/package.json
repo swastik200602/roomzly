@@ -1,6 +1,7 @@
 {
   "name": "roomzly-backend",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Roomzly student rental marketplace API (Express 5 + TypeScript + Prisma)",
   "private": true,
   "type": "module",
   "engines": {
