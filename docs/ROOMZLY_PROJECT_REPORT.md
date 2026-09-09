@@ -9,14 +9,14 @@ Roomzly is a full-stack real estate discovery and management platform for rooms,
 The project is split into two main applications:
 
 - `Frontend`: React + TypeScript single-page application built with Vite, TanStack Router, TanStack Query, Tailwind CSS, Zustand, Radix UI, and Firebase Hosting.
-- `Backend`: Node.js + TypeScript Express API using Prisma ORM, PostgreSQL, Redis, JWT authentication, Socket.IO, Cloudinary, Zod validation, Pino logging, Helmet, CORS, and Railway deployment.
+- `Backend`: Node.js + TypeScript Express API using Prisma ORM, PostgreSQL, Redis, JWT authentication, Socket.IO, Cloudinary, Zod validation, Pino logging, Helmet, CORS, and Render / Railway deployment.
 
 The production target is:
 
 - Frontend hosting: Firebase Hosting
-- Backend hosting: Railway
-- Database: PostgreSQL
-- Cache/session utilities: Redis
+- Backend hosting: Render Web Service (or Railway)
+- Database: PostgreSQL (Supabase)
+- Cache/session utilities: Redis (Upstash)
 - Media storage: Cloudinary
 
 The application is designed as a marketplace with three major user classes:
@@ -116,7 +116,7 @@ roomzly-hub-main/
 | Logging             | Pino and pino-http                       |
 | API docs            | Swagger/OpenAPI                          |
 | Security middleware | Helmet, CORS, cookie-parser, compression |
-| Deployment          | Railway                                  |
+| Deployment          | Render / Railway / Firebase              |
 
 ## 5. Frontend Architecture
 
@@ -434,14 +434,15 @@ npm run build:firebase
 firebase deploy --only hosting
 ```
 
-### Backend on Railway
+### Backend on Render / Railway
 
-Railway runs the Express API.
+Render or Railway runs the Express API.
 
 Important scripts:
 
 ```text
-npm run railway:build
+npm run render:build    # for Render
+npm run railway:build   # for Railway
 npm run start:prod
 ```
 
@@ -461,7 +462,7 @@ GET /ready
 Required production variable:
 
 ```text
-VITE_API_URL=https://YOUR_RAILWAY_BACKEND_DOMAIN/api/v1
+VITE_API_URL=https://roomzly-backend.onrender.com/api/v1
 ```
 
 ### Backend
@@ -490,7 +491,7 @@ SMTP_PASS=...
 SMTP_FROM=...
 ```
 
-Secrets must be stored in Railway/Firebase or local `.env` files and must not be committed.
+Secrets must be stored in Render/Firebase or local `.env` files and must not be committed.
 
 ## 14. Security Design
 
@@ -601,9 +602,9 @@ Recommended smoke tests:
 | Risk                                              | Impact                             | Mitigation                                                        |
 | ------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------------- |
 | Reintroducing root document shell in `__root.tsx` | Input/routing freeze in production | Keep document tags in `index.html`; review root changes carefully |
-| Missing/incorrect `VITE_API_URL`                  | Frontend cannot reach backend      | Use deployed Railway `/api/v1` URL                                |
+| Missing/incorrect `VITE_API_URL`                  | Frontend cannot reach backend      | Use deployed Render `/api/v1` URL                                 |
 | CORS mismatch                                     | Login/API failures in production   | Set `FRONTEND_URL` and `ADDITIONAL_CORS_ORIGINS` correctly        |
-| Cookie SameSite mismatch                          | Refresh/session issues             | Use `COOKIE_SAME_SITE=none` for Firebase-to-Railway cross-site    |
+| Cookie SameSite mismatch                          | Refresh/session issues             | Use `COOKIE_SAME_SITE=none` for Firebase-to-Render cross-site     |
 | Redis unavailable                                 | Rate limit/cache degraded          | Monitor `/ready`; gracefully degrade where implemented            |
 | Missing SMTP                                      | Password reset emails fail         | Configure SMTP and verify domain                                  |
 | Unseeded admin                                    | Admin dashboard unavailable        | Promote first admin through SQL                                   |
@@ -616,7 +617,7 @@ Recommended next improvements:
 - Add Playwright end-to-end tests for auth, search, listing, dashboard, and chat.
 - Add production error monitoring such as Sentry.
 - Add analytics dashboards for real user behavior.
-- Add staging Firebase and Railway environments.
+- Add staging Firebase and Render environments.
 - Add image moderation and document review queue improvements.
 - Add push notifications or email notifications for booking/message events.
 - Add payment/rent collection integration if business requirements require it.
@@ -659,4 +660,4 @@ Roomzly is a production-oriented full-stack real estate platform with a clear se
 
 The most important architectural stability rule is to keep the frontend as a normal Vite SPA: `index.html` owns the document, while `__root.tsx` owns only the React application layout. Following that rule prevents the input-focus and routing freeze that was previously diagnosed and fixed.
 
-With Firebase Hosting, Railway, PostgreSQL, Redis, and Cloudinary configured correctly, the project is ready for production smoke testing and iterative launch hardening.
+With Firebase Hosting, Render / Railway, PostgreSQL, Redis, and Cloudinary configured correctly, the project is ready for production smoke testing and iterative launch hardening.

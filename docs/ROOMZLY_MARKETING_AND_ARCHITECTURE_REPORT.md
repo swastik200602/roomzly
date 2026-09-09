@@ -8,7 +8,7 @@ Roomzly is a full-stack real estate discovery and management platform for rental
 
 The strongest product story is trust. Roomzly does not stop at browsing listings. It adds owner accounts, phone verification gates, owner and property document review, admin moderation, reports, booking workflows, realtime chat, notifications, saved properties, comparison, analytics, and SEO landing routes.
 
-The project demonstrates end-to-end product engineering: a React and TypeScript frontend, an Express and Prisma backend, PostgreSQL schema design, JWT authentication, Redis-backed caching and rate limiting, Socket.IO realtime messaging, Cloudinary uploads, signed verification document URLs, Railway backend deployment, and Firebase Hosting configuration for the frontend.
+The project demonstrates end-to-end product engineering: a React and TypeScript frontend, an Express and Prisma backend, PostgreSQL schema design, JWT authentication, Redis-backed caching and rate limiting, Socket.IO realtime messaging, Cloudinary uploads, signed verification document URLs, Render backend deployment, and Firebase Hosting configuration for the frontend.
 
 Important accuracy note: the codebase does not show an in-product AI integration. The AI prompts in this report are for generating promotional videos with AI video tools, not for claiming that Roomzly itself is AI-powered.
 
@@ -44,7 +44,7 @@ Backend stack:
 - Zod request validation.
 - Helmet, CORS, compression, cookie-parser, pino logging, centralized errors.
 - Swagger/OpenAPI available in development.
-- Railway deployment config with health checks.
+- Render / Railway deployment config with health checks.
 
 Technologies not found in implemented app logic:
 
@@ -60,7 +60,7 @@ Architecture:
 - The frontend is a Vite SPA with Firebase production build config. It keeps document shell ownership in `index.html` and renders providers/layout in `src/routes/__root.tsx`.
 - The backend follows module boundaries: routes, controllers, services, schemas, middleware, and shared libs.
 - Prisma models cover users, OAuth accounts, refresh tokens, properties, images, bookings, message threads, participants, messages, attachments, reviews, wishlist, notifications, verification documents, reports, audit logs, and analytics events.
-- Deployment is split: Firebase Hosting for frontend, Railway for backend, PostgreSQL, Redis, and Cloudinary.
+- Deployment is split: Firebase Hosting for frontend, Render / Railway for backend, PostgreSQL, Redis, and Cloudinary.
 
 Security and reliability:
 
@@ -256,7 +256,7 @@ Complex engineering challenges solved:
 - Sensitive document review with signed URLs.
 - Cache invalidation around listing mutations.
 - Admin auditability for moderation actions.
-- Cross-site production cookie handling for Firebase frontend and Railway backend.
+- Cross-site production cookie handling for Firebase frontend and Render backend.
 - Mobile-first dashboard messaging experience.
 
 Senior-thinking signals:
@@ -302,7 +302,7 @@ Roomzly is a trust-first rental marketplace that helps residents find verified r
 
 30-second elevator pitch:
 
-Roomzly is a full-stack property rental platform built for verified discovery. Renters can search by location, budget, category, amenities, and map view, then save, compare, book, review, report, and chat with owners in realtime. Owners get listing management, image uploads, booking workflows, analytics, and verification tools. Admins get moderation, document review, reports, and audit logs. It is built with React, TypeScript, Express, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary, Firebase Hosting, and Railway.
+Roomzly is a full-stack property rental platform built for verified discovery. Renters can search by location, budget, category, amenities, and map view, then save, compare, book, review, report, and chat with owners in realtime. Owners get listing management, image uploads, booking workflows, analytics, and verification tools. Admins get moderation, document review, reports, and audit logs. It is built with React, TypeScript, Express, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary, Firebase Hosting, and Render.
 
 60-second startup pitch:
 
@@ -310,11 +310,11 @@ Rental discovery is still fragmented, noisy, and trust-poor, especially for stud
 
 90-second investor pitch:
 
-Roomzly targets a real pain in local rental markets: users waste time across scattered listings, unverifiable owners, poor images, and unsafe communication channels, while property owners lack a polished way to manage supply and leads. Roomzly solves this as a trust-first rental marketplace. The resident side supports search, filters, maps, wishlist, compare, booking requests, reviews, reports, and realtime owner chat. The owner side supports listing creation, photo uploads, phone verification gates, property verification documents, booking management, analytics, and notifications. The admin side supports users, listings, bookings, verification queues, reports, and audit logs. The technical foundation is production-oriented: React and TypeScript frontend, Express and Prisma backend, PostgreSQL, Redis, JWT auth, Socket.IO, Cloudinary, Firebase Hosting, and Railway. The business can monetize through premium listings, verified-owner subscriptions, lead fees, and operator plans for PGs, hostels, and property managers.
+Roomzly targets a real pain in local rental markets: users waste time across scattered listings, unverifiable owners, poor images, and unsafe communication channels, while property owners lack a polished way to manage supply and leads. Roomzly solves this as a trust-first rental marketplace. The resident side supports search, filters, maps, wishlist, compare, booking requests, reviews, reports, and realtime owner chat. The owner side supports listing creation, photo uploads, phone verification gates, property verification documents, booking management, analytics, and notifications. The admin side supports users, listings, bookings, verification queues, reports, and audit logs. The technical foundation is production-oriented: React and TypeScript frontend, Express and Prisma backend, PostgreSQL, Redis, JWT auth, Socket.IO, Cloudinary, Firebase Hosting, and Render / Railway. The business can monetize through premium listings, verified-owner subscriptions, lead fees, and operator plans for PGs, hostels, and property managers.
 
 LinkedIn showcase summary:
 
-Built Roomzly, a production-oriented full-stack rental marketplace for verified property discovery. The platform includes public listing search, map search, wishlist, compare, booking requests, realtime chat, owner dashboards, analytics, document verification, reports, notifications, and admin moderation. Tech stack: React 19, TypeScript, Vite, TanStack Router, TanStack Query, Zustand, Tailwind CSS, Express 5, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary, JWT auth, Firebase Hosting, and Railway. The project demonstrates product thinking, marketplace architecture, secure auth, realtime systems, relational database design, role-based access control, and production deployment readiness.
+Built Roomzly, a production-oriented full-stack rental marketplace for verified property discovery. The platform includes public listing search, map search, wishlist, compare, booking requests, realtime chat, owner dashboards, analytics, document verification, reports, notifications, and admin moderation. Tech stack: React 19, TypeScript, Vite, TanStack Router, TanStack Query, Zustand, Tailwind CSS, Express 5, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary, JWT auth, Firebase Hosting, and Render. The project demonstrates product thinking, marketplace architecture, secure auth, realtime systems, relational database design, role-based access control, and production deployment readiness.
 
 ## LinkedIn Showcase Strategy
 
@@ -339,7 +339,7 @@ Recommended video structure:
 - 18-28s: Marketplace workflows: booking, chat, owner dashboard.
 - 28-38s: Trust layer: phone verification, documents, reports, admin review, audit logs.
 - 38-48s: Technical architecture: React, TypeScript, Express, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary.
-- 48-55s: Deployment: Firebase Hosting and Railway.
+- 48-55s: Deployment: Firebase Hosting and Render.
 - 55-60s: CTA: portfolio, GitHub, live site, LinkedIn.
 
 Results to show accurately:
@@ -444,7 +444,7 @@ Concept 5: Developer Showcase
 - 32-42s: Booking request, realtime chat, notifications.
 - 42-52s: Owner dashboard, analytics, verification, admin moderation.
 - 52-60s: Architecture and CTA.
-- Voiceover: "I built Roomzly as a full-stack marketplace for verified rental discovery. It supports residents searching for rooms, PGs, flats, and homes; owners managing listings and bookings; and admins keeping the marketplace safe. Under the hood: React, TypeScript, TanStack Query, Zustand, Express, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary, Firebase Hosting, and Railway."
+- Voiceover: "I built Roomzly as a full-stack marketplace for verified rental discovery. It supports residents searching for rooms, PGs, flats, and homes; owners managing listings and bookings; and admins keeping the marketplace safe. Under the hood: React, TypeScript, TanStack Query, Zustand, Express, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary, Firebase Hosting, and Render."
 - B-roll prompts: Product UI walkthrough, code editor, database schema, cloud deployment dashboard.
 - Music: Premium tech documentary style.
 
@@ -470,7 +470,7 @@ Use this accuracy constraint in every prompt:
 
 Veo 3 prompt:
 
-Create a cinematic 60-second LinkedIn showcase video for Roomzly, a trust-first rental marketplace built by a full-stack developer. Show realistic laptop and mobile UI shots: property search filters, listing cards with verified badges, map search, wishlist, compare, booking request, realtime owner chat, owner dashboard, admin verification queue, reports, audit logs, and technical architecture overlays. Use modern SaaS visual style, clean typography, realistic office and city rental scenes, smooth camera pushes, shallow depth of field, no exaggerated futuristic visuals. End with stack text: React, TypeScript, Express, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary, Firebase Hosting, Railway. Professional, recruiter-focused, premium tech soundtrack.
+Create a cinematic 60-second LinkedIn showcase video for Roomzly, a trust-first rental marketplace built by a full-stack developer. Show realistic laptop and mobile UI shots: property search filters, listing cards with verified badges, map search, wishlist, compare, booking request, realtime owner chat, owner dashboard, admin verification queue, reports, audit logs, and technical architecture overlays. Use modern SaaS visual style, clean typography, realistic office and city rental scenes, smooth camera pushes, shallow depth of field, no exaggerated futuristic visuals. End with stack text: React, TypeScript, Express, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary, Firebase Hosting, Render. Professional, recruiter-focused, premium tech soundtrack.
 
 Kling AI prompt:
 
@@ -513,7 +513,7 @@ Roomzly includes:
 - Realtime owner-resident chat with attachments, typing, and read states.
 - Owner dashboard for listings, bookings, analytics, uploads, and verification.
 - Admin panel for users, properties, bookings, reports, document review, and audit logs.
-- Production-oriented backend with JWT auth, refresh-token rotation, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary, Railway, and Firebase Hosting.
+- Production-oriented backend with JWT auth, refresh-token rotation, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary, Render, and Firebase Hosting.
 
 This project helped me think like both a product builder and a platform engineer: trust workflows, marketplace operations, realtime systems, database design, auth, security, and deployment all had to work together.
 
@@ -529,7 +529,7 @@ LinkedIn carousel:
 8. Realtime layer: Socket.IO chat, notifications, typing, read states.
 9. Backend: Express, Prisma, PostgreSQL, Redis, JWT, Cloudinary.
 10. Frontend: React, TypeScript, TanStack Router, TanStack Query, Zustand, Tailwind.
-11. Deployment: Firebase Hosting, Railway, health checks, production CORS.
+11. Deployment: Firebase Hosting, Render, health checks, production CORS.
 12. Built to show product thinking plus engineering execution.
 
 Twitter/X thread:
@@ -546,7 +546,7 @@ Twitter/X thread:
 
 Instagram caption:
 
-Built Roomzly: a verified rental marketplace for finding rooms, PGs, flats, and homes with search, maps, wishlist, compare, booking, realtime chat, owner dashboards, and admin moderation. Full-stack build with React, TypeScript, Express, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary, Firebase Hosting, and Railway.
+Built Roomzly: a verified rental marketplace for finding rooms, PGs, flats, and homes with search, maps, wishlist, compare, booking, realtime chat, owner dashboards, and admin moderation. Full-stack build with React, TypeScript, Express, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary, Firebase Hosting, and Render.
 
 Product Hunt description:
 
@@ -554,11 +554,11 @@ Roomzly is a trust-first rental marketplace for rooms, PGs, flats, homes, and co
 
 Resume project description:
 
-Built Roomzly, a production-oriented full-stack real estate rental marketplace using React, TypeScript, Express, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary, Firebase Hosting, and Railway. Implemented property discovery, advanced filters, map search, wishlist, compare, booking requests, realtime chat, notifications, owner dashboards, analytics, document verification, reporting, admin moderation, JWT authentication, refresh-token rotation, role-based access control, Redis caching/rate limiting, and Cloudinary uploads.
+Built Roomzly, a production-oriented full-stack real estate rental marketplace using React, TypeScript, Express, Prisma, PostgreSQL, Redis, Socket.IO, Cloudinary, Firebase Hosting, and Render. Implemented property discovery, advanced filters, map search, wishlist, compare, booking requests, realtime chat, notifications, owner dashboards, analytics, document verification, reporting, admin moderation, JWT authentication, refresh-token rotation, role-based access control, Redis caching/rate limiting, and Cloudinary uploads.
 
 ATS-friendly project description:
 
-Full Stack Developer Project: Roomzly. Technologies: React, TypeScript, Vite, TanStack Router, TanStack Query, Zustand, Tailwind CSS, Node.js, Express.js, Prisma ORM, PostgreSQL, Redis, Socket.IO, Cloudinary, JWT, REST API, Firebase Hosting, Railway. Features: authentication, authorization, property search, map search, booking system, realtime messaging, file uploads, notifications, analytics, admin dashboard, moderation, verification documents, audit logs, rate limiting, caching, deployment.
+Full Stack Developer Project: Roomzly. Technologies: React, TypeScript, Vite, TanStack Router, TanStack Query, Zustand, Tailwind CSS, Node.js, Express.js, Prisma ORM, PostgreSQL, Redis, Socket.IO, Cloudinary, JWT, REST API, Firebase Hosting, Render. Features: authentication, authorization, property search, map search, booking system, realtime messaging, file uploads, notifications, analytics, admin dashboard, moderation, verification documents, audit logs, rate limiting, caching, deployment.
 
 ## Portfolio Case Study
 
@@ -576,7 +576,7 @@ Roomzly combines public discovery, owner operations, and admin trust workflows. 
 
 Technical approach:
 
-The frontend uses React, TypeScript, TanStack Router, TanStack Query, Zustand, Tailwind CSS, Radix-style UI components, Leaflet, and Socket.IO Client. The backend uses Express, Prisma, PostgreSQL, Redis, JWT auth, Socket.IO, Cloudinary, Zod, Helmet, CORS, Pino, and Railway deployment.
+The frontend uses React, TypeScript, TanStack Router, TanStack Query, Zustand, Tailwind CSS, Radix-style UI components, Leaflet, and Socket.IO Client. The backend uses Express, Prisma, PostgreSQL, Redis, JWT auth, Socket.IO, Cloudinary, Zod, Helmet, CORS, Pino, and Render / Railway deployment.
 
 Key decisions:
 
