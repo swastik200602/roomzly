@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Heart, GitCompare, User, Search, Menu, X, Plus } from "lucide-react";
+import { Heart, GitCompare, User, Search, Menu, X, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useWishlist } from "@/stores/wishlist";
 import { useCompare } from "@/stores/compare";
@@ -8,9 +8,11 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { to: "/explore", label: "Rooms & PGs" },
-  { to: "/search-map", label: "Campus Map" },
-  { to: "/explore", search: { verified: 1 }, label: "Verified Landlords" },
+  { to: "/explore", label: "Explore" },
+  { to: "/search-map", label: "Map Search", icon: MapPin },
+  { to: "/pg-hostels", label: "Student PGs" },
+  { to: "/verified-owners", label: "Verified Owners" },
+  { to: "/journal", label: "Journal" },
 ] as const;
 
 export function Navbar() {
@@ -20,6 +22,11 @@ export function Navbar() {
   const user = useAuth((s) => s.user);
   const canManageListings = user?.role === "OWNER" || user?.role === "ADMIN";
   const [open, setOpen] = useState(false);
+
+  const isCurrent = (to: string) => {
+    if (to === "/") return pathname === "/";
+    return pathname === to || pathname.startsWith(`${to}/`);
+  };
 
   useEffect(() => {
     setOpen(false);
@@ -49,22 +56,34 @@ export function Navbar() {
           </Link>
 
           {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
-            {NAV.map((n) => (
-              <Link
-                key={`${n.to}-${n.label}`}
-                to={n.to}
-                search={"search" in n ? (n.search as never) : undefined}
-                preload={false}
-                className="hover:text-foreground transition-colors"
-              >
-                {n.label}
-              </Link>
-            ))}
+          <div className="hidden md:flex items-center gap-5 lg:gap-7 text-sm font-medium">
+            {NAV.map((n) => {
+              const active = isCurrent(n.to);
+              const Icon = "icon" in n ? n.icon : null;
+              return (
+                <Link
+                  key={n.to}
+                  to={n.to}
+                  preload={false}
+                  className={cn(
+                    "relative py-1 transition-colors flex items-center gap-1.5",
+                    active
+                      ? "text-foreground font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {Icon && <Icon className={cn("size-3.5", active ? "text-accent" : "text-muted-foreground")} />}
+                  <span>{n.label}</span>
+                  {active && (
+                    <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-accent rounded-full" />
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Right actions */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             {/* Search — always visible */}
             <Link
               to="/explore"
@@ -107,24 +126,14 @@ export function Navbar() {
               )}
             </Link>
 
-            {/* List Your PG CTA for Landlords */}
-            <Link
-              to={user ? "/dashboard/add-property" : "/auth/login"}
-              preload={false}
-              className="hidden lg:inline-flex text-xs font-semibold uppercase tracking-wider text-accent border border-accent/40 bg-accent/10 px-3 py-2 rounded-sm hover:bg-accent hover:text-accent-foreground transition-all items-center gap-1.5 ml-1"
-            >
-              <Plus className="size-3.5" />
-              List PG
-            </Link>
-
-            {/* Sign in / Dashboard — desktop */}
+            {/* Sign in — desktop */}
             <Link
               to={user ? "/dashboard" : "/auth/login"}
               preload={false}
-              className="hidden md:inline-flex text-sm font-semibold bg-foreground text-background px-3.5 py-2 rounded-sm hover:opacity-80 transition-opacity items-center gap-2 ml-1"
+              className="hidden md:inline-flex text-sm font-semibold bg-foreground text-background px-4 py-2 rounded-sm hover:opacity-80 transition-opacity items-center gap-2 ml-1"
             >
               <User className="size-3.5" />
-              {user ? (user.role === "OWNER" ? "Owner Portal" : user.role === "ADMIN" ? "Admin" : "Dashboard") : "Sign In"}
+              {user ? "Dashboard" : "Sign In"}
             </Link>
 
             {/* Hamburger — mobile only */}
@@ -152,18 +161,32 @@ export function Navbar() {
           >
             {/* Nav links */}
             <div className="px-4 py-2 border-b border-border">
-              {NAV.map((n) => (
-                <Link
-                  key={`${n.to}-${n.label}`}
-                  to={n.to}
-                  search={"search" in n ? (n.search as never) : undefined}
-                  preload={false}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center h-12 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors border-b border-border last:border-0"
-                >
-                  {n.label}
-                </Link>
-              ))}
+              {NAV.map((n) => {
+                const active = isCurrent(n.to);
+                const Icon = "icon" in n ? n.icon : null;
+                return (
+                  <Link
+                    key={n.to}
+                    to={n.to}
+                    preload={false}
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "flex items-center justify-between h-12 text-sm font-medium transition-colors border-b border-border last:border-0",
+                      active ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      {Icon && <Icon className={cn("size-4", active ? "text-accent" : "text-muted-foreground")} />}
+                      {n.label}
+                    </span>
+                    {n.to === "/search-map" && (
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-accent/15 text-accent">
+                        Live Map
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Actions */}
@@ -198,15 +221,16 @@ export function Navbar() {
                   )}
                 </Link>
               </div>
-              <Link
-                to={user ? "/dashboard/add-property" : "/auth/login"}
-                preload={false}
-                onClick={() => setOpen(false)}
-                className="flex items-center justify-center gap-2 h-11 border border-accent/40 bg-accent/10 rounded-sm text-sm font-semibold text-accent hover:bg-accent hover:text-accent-foreground transition-colors"
-              >
-                <Plus className="size-4" />
-                List Your PG / Room
-              </Link>
+              {canManageListings && (
+                <Link
+                  to="/dashboard/add-property"
+                  preload={false}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-center h-11 border border-border rounded-sm text-sm font-medium hover:bg-surface-hi transition-colors"
+                >
+                  List Property
+                </Link>
+              )}
               <Link
                 to={user ? "/dashboard" : "/auth/login"}
                 preload={false}

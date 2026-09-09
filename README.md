@@ -8,7 +8,7 @@
 [![Redis](https://img.shields.io/badge/Redis-Upstash-DC382D.svg?logo=redis)](https://upstash.com/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.2-38B2AC.svg?logo=tailwindcss)](https://tailwindcss.com/)
 [![Socket.io](https://img.shields.io/badge/Socket.IO-4.8-010101.svg?logo=socketdotio)](https://socket.io/)
-[![CI](https://github.com/swastik200602/roomzly/actions/workflows/ci.yml/badge.svg)](https://github.com/swastik200602/roomzly/actions)
+[![CI](https://github.com/swastik200602/roomzly-hub/actions/workflows/ci.yml/badge.svg)](https://github.com/swastik200602/roomzly-hub/actions)
 [![Tests: Vitest](https://img.shields.io/badge/Tests-7%20Passed-brightgreen.svg?logo=vitest)](https://vitest.dev/)
 [![Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](README.md)
 
@@ -20,23 +20,10 @@
 
 | Component | Status | Production Link |
 | :--- | :--- | :--- |
-| **🌐 Production Web App** | ![Live](https://img.shields.io/badge/Frontend-Live_roomzly.in-blue) | [`https://roomzly.in`](https://roomzly.in) |
-| **⚡ Backend API** | ![Operational](https://img.shields.io/badge/Status-Operational-brightgreen) | [`https://roomzly-backend.onrender.com`](https://roomzly-backend.onrender.com) |
-| **📚 Interactive Swagger Docs** | ![OpenAPI](https://img.shields.io/badge/API_Docs-Swagger_UI-green) | [`https://roomzly-backend.onrender.com/api-docs`](https://roomzly-backend.onrender.com/api-docs) |
-| **💓 API Healthcheck** | ![Healthy](https://img.shields.io/badge/Health-200_OK-brightgreen) | [`https://roomzly-backend.onrender.com/health`](https://roomzly-backend.onrender.com/health) |
-| **🛡️ Database & Cache Probe** | ![Ready](https://img.shields.io/badge/Readiness-Ready-brightgreen) | [`https://roomzly-backend.onrender.com/ready`](https://roomzly-backend.onrender.com/ready) |
-
----
-
-## 🔑 Recruiter & Demo Access (1-Click Login on [roomzly.in/auth/login](https://roomzly.in/auth/login))
-
-The live site features a **1-Click Quick Demo Bar** on the login page for instantaneous testing without typing credentials:
-
-| Role | Demo Email | Password | What to Test |
-| :--- | :--- | :--- | :--- |
-| **🎓 Student / Resident** | `resident@roomzly.test` | `Password123!` | Search by campus (UPES/Graphic Era), test date reservations, send realtime messages |
-| **🏡 Verified Landlord** | `owner@roomzly.test` | `Password123!` | Manage active listings, accept/decline bookings, view monthly revenue analytics |
-| **🛡️ Platform Admin** | `admin@roomzly.test` | `Password123!` | Approve/reject listings, verify landlord IDs, view audit logs |
+| **Backend API** | ![Operational](https://img.shields.io/badge/Status-Operational-brightgreen) | [`https://roomzly-backend.onrender.com`](https://roomzly-backend.onrender.com) |
+| **API Healthcheck** | ![Healthy](https://img.shields.io/badge/Health-200_OK-brightgreen) | [`https://roomzly-backend.onrender.com/health`](https://roomzly-backend.onrender.com/health) |
+| **Ready & DB Probe** | ![Ready](https://img.shields.io/badge/Readiness-Ready-brightgreen) | [`https://roomzly-backend.onrender.com/ready`](https://roomzly-backend.onrender.com/ready) |
+| **Sample Endpoint** | ![JSON](https://img.shields.io/badge/Properties-6_Listings-blue) | [`https://roomzly-backend.onrender.com/api/v1/properties`](https://roomzly-backend.onrender.com/api/v1/properties) |
 
 ---
 

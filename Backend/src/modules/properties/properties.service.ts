@@ -64,19 +64,35 @@ function categoryCode(category: PropertyCategory): string {
 }
 
 async function createUniqueSlug(title: string): Promise<string> {
-  const base = slugify(title, { lower: true, strict: true });
-  let slug = base;
+  const base = slugify(title, { lower: true, strict: true }) || "property";
+  const existing = await prisma.property.findMany({
+    where: {
+      slug: {
+        startsWith: base
+      }
+    },
+    select: { slug: true }
+  });
+
+  const slugSet = new Set(existing.map((item) => item.slug));
+  if (!slugSet.has(base)) return base;
+
   let suffix = 2;
-  while (await prisma.property.findUnique({ where: { slug } })) {
-    slug = `${base}-${suffix}`;
+  while (slugSet.has(`${base}-${suffix}`)) {
     suffix += 1;
   }
-  return slug;
+  return `${base}-${suffix}`;
 }
 
 async function createPropertyCode(category: PropertyCategory): Promise<string> {
-  const count = await prisma.property.count();
-  return `${String(count + 1).padStart(3, "0")}_${categoryCode(category)}`;
+  const cat = categoryCode(category);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const randomSuffix = crypto.randomBytes(3).toString("hex").toUpperCase();
+    const candidate = `${cat}-${randomSuffix}`;
+    const exists = await prisma.property.findUnique({ where: { code: candidate } });
+    if (!exists) return candidate;
+  }
+  return `${cat}-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString("hex").toUpperCase()}`;
 }
 
 function buildWhere(input: PropertyQueryInput): Prisma.PropertyWhereInput {

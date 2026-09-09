@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { GraduationCap, Search as SearchIcon, ShieldCheck, SlidersHorizontal, Sparkles, X } from "lucide-react";
+import { GraduationCap, MapPin, Search as SearchIcon, ShieldCheck, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { z } from "zod";
 
@@ -406,24 +406,33 @@ function ExplorePage() {
                   : "Compare verified listings, owner trust, and student-friendly details before you contact anyone."}
               </p>
             </div>
-            <label className="sr-only" htmlFor="explore-sort">
-              Sort listings
-            </label>
-            <select
-              id="explore-sort"
-              value={sort}
-              onChange={(event) => {
-                setSort(event.target.value);
-                setPage(1);
-              }}
-              className="h-10 w-full border border-border bg-background px-3 text-xs font-mono uppercase text-foreground focus:outline-none focus:ring-1 focus:ring-ring xl:w-52"
-            >
-              <option value="featured">Sort: Featured</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-              <option value="newest">Newest</option>
-              <option value="popular">Most viewed</option>
-            </select>
+            <div className="flex items-center gap-2 w-full xl:w-auto">
+              <Link
+                to="/search-map"
+                className="inline-flex items-center justify-center gap-1.5 h-10 px-4 border border-border bg-background hover:bg-surface-hi text-xs font-mono uppercase tracking-wider text-foreground hover:border-accent transition-colors shrink-0"
+              >
+                <MapPin className="size-3.5 text-accent" />
+                <span>Map View</span>
+              </Link>
+              <label className="sr-only" htmlFor="explore-sort">
+                Sort listings
+              </label>
+              <select
+                id="explore-sort"
+                value={sort}
+                onChange={(event) => {
+                  setSort(event.target.value);
+                  setPage(1);
+                }}
+                className="h-10 w-full border border-border bg-background px-3 text-xs font-mono uppercase text-foreground focus:outline-none focus:ring-1 focus:ring-ring xl:w-52"
+              >
+                <option value="featured">Sort: Featured</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="newest">Newest</option>
+                <option value="popular">Most viewed</option>
+              </select>
+            </div>
           </div>
 
           <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">

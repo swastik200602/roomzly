@@ -1,12 +1,12 @@
 import "leaflet/dist/leaflet.css";
 
 import { Link } from "@tanstack/react-router";
-import { Crosshair, LoaderCircle } from "lucide-react";
+import { ArrowRight, Crosshair, LayoutGrid, LoaderCircle, MapPin, Search, ShieldCheck, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { ProgressiveImage } from "@/components/property/ProgressiveImage";
 import { formatCurrency } from "@/lib/currency";
 import type { Property } from "@/lib/properties";
-import { COLLEGES } from "@/lib/college-discovery";
 import { cn } from "@/lib/utils";
 
 type LocationValue = {
@@ -30,30 +30,67 @@ type LeafletMarkerInstance = ReturnType<LeafletModule["marker"]>;
 
 const DEFAULT_CENTER: [number, number] = [30.3256, 78.0437];
 
-function markerIcon(leaflet: LeafletModule) {
+function createSimplePinIcon(leaflet: LeafletModule, active = false) {
+  const width = active ? 36 : 28;
+  const height = active ? 46 : 38;
+  const pinBg = active ? "#2563eb" : "#0f172a";
+  const stroke = "#ffffff";
+  const strokeWidth = active ? "2.5" : "2";
+  const dotColor = active ? "#ffffff" : "#38bdf8";
+
+  const html = `
+    <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;">
+      <svg width="${width}" height="${height}" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 4px 10px rgba(0,0,0,0.5));">
+        <path d="M16 39C16 39 30.5 25 30.5 15.5C30.5 7.49187 24.0081 1 16 1C7.99187 1 1.5 7.49187 1.5 15.5C1.5 25 16 39 16 39Z" fill="${pinBg}" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>
+        <circle cx="16" cy="15.5" r="7" fill="#ffffff"/>
+        <circle cx="16" cy="15.5" r="3.8" fill="${dotColor}"/>
+      </svg>
+    </div>
+  `;
+
   return leaflet.divIcon({
-    className: "",
-    html: '<span style="display:block;width:18px;height:18px;border-radius:9999px;background:#111;border:3px solid white;box-shadow:0 6px 18px rgba(0,0,0,.35)"></span>',
-    iconSize: [18, 18],
-    iconAnchor: [9, 9],
+    className: "roomzly-pin-marker",
+    html,
+    iconSize: [width, height],
+    iconAnchor: [width / 2, height],
+    popupAnchor: [0, -height],
   });
 }
 
-function activeMarkerIcon(leaflet: LeafletModule) {
-  return leaflet.divIcon({
-    className: "",
-    html: '<span style="display:block;width:24px;height:24px;border-radius:9999px;background:#c9ff52;border:4px solid #111;box-shadow:0 8px 22px rgba(0,0,0,.4)"></span>',
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-  });
-}
+function createPropertyPinIcon(leaflet: LeafletModule, property: Property, isActive = false) {
+  const width = isActive ? 34 : 28;
+  const height = isActive ? 44 : 36;
+  const pinBg = isActive ? "#2563eb" : "#0f172a";
+  const stroke = isActive ? "#ffffff" : "#f1f5f9";
+  const strokeWidth = isActive ? "2.5" : "2";
+  const iconFill = isActive ? "#2563eb" : "#38bdf8";
+  const innerCircleFill = isActive ? "#ffffff" : "#1e293b";
 
-function collegeMarkerIcon(leaflet: LeafletModule, shortName: string) {
+  const shortPrice =
+    property.price >= 1000
+      ? `₹${(property.price / 1000).toFixed(property.price % 1000 === 0 ? 0 : 1)}k`
+      : `₹${property.price}`;
+
+  const html = `
+    <div class="roomzly-pin-wrapper" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;user-select:none;transform:translate3d(0,0,0);">
+      <div style="background:${isActive ? '#2563eb' : 'rgba(15, 23, 42, 0.95)'};color:#ffffff;font-size:${isActive ? '11px' : '10px'};font-weight:700;font-family:system-ui,-apple-system,sans-serif;padding:2px 7px;border-radius:9999px;border:1.5px solid ${isActive ? '#ffffff' : 'rgba(255,255,255,0.45)'};box-shadow:0 4px 10px rgba(0,0,0,0.45);white-space:nowrap;margin-bottom:2px;letter-spacing:0.02em;">
+        ${shortPrice}
+      </div>
+      <svg width="${width}" height="${height - 10}" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 4px 8px rgba(0,0,0,0.5));">
+        <path d="M16 39C16 39 30.5 25 30.5 15.5C30.5 7.49187 24.0081 1 16 1C7.99187 1 1.5 7.49187 1.5 15.5C1.5 25 16 39 16 39Z" fill="${pinBg}" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>
+        <circle cx="16" cy="15.5" r="7.5" fill="${innerCircleFill}"/>
+        <path d="M12 18V16L16 12.5L20 16V18H12Z" fill="${iconFill}"/>
+        <rect x="14.5" y="15.5" width="3" height="2.5" fill="${innerCircleFill}"/>
+      </svg>
+    </div>
+  `;
+
   return leaflet.divIcon({
-    className: "",
-    html: `<div style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:9999px;background:#1e1b4b;border:1.5px solid #818cf8;color:#fff;font-size:10px;font-weight:700;box-shadow:0 4px 12px rgba(0,0,0,0.35);white-space:nowrap;">🎓 ${shortName}</div>`,
-    iconSize: [80, 22],
-    iconAnchor: [40, 11],
+    className: "roomzly-pin-marker",
+    html,
+    iconSize: [80, height + 16],
+    iconAnchor: [40, height + 14],
+    popupAnchor: [0, -(height + 14)],
   });
 }
 
@@ -134,7 +171,7 @@ export function LocationPicker({
     const map = mapRef.current;
     if (leaflet && map) {
       markerRef.current?.remove();
-      markerRef.current = leaflet.marker([lat, lon], { icon: activeMarkerIcon(leaflet) }).addTo(map);
+      markerRef.current = leaflet.marker([lat, lon], { icon: createSimplePinIcon(leaflet, true) }).addTo(map);
       map.setView([lat, lon], 16);
     }
 
@@ -174,7 +211,7 @@ export function LocationPicker({
       mapRef.current = map;
 
       if (selected) {
-        markerRef.current = leaflet.marker(center, { icon: activeMarkerIcon(leaflet) }).addTo(map);
+        markerRef.current = leaflet.marker(center, { icon: createSimplePinIcon(leaflet, true) }).addTo(map);
       }
 
       map.on("click", async (event) => {
@@ -199,7 +236,7 @@ export function LocationPicker({
     if (!leaflet || !mapRef.current || !selected) return;
     const point: [number, number] = [value.latitude!, value.longitude!];
     markerRef.current?.remove();
-    markerRef.current = leaflet.marker(point, { icon: activeMarkerIcon(leaflet) }).addTo(mapRef.current);
+    markerRef.current = leaflet.marker(point, { icon: createSimplePinIcon(leaflet, true) }).addTo(mapRef.current);
     mapRef.current.setView(point, 15);
   }, [selected, value?.latitude, value?.longitude]);
 
@@ -328,7 +365,7 @@ export function PropertyLocationMap({
     void loadLeaflet().then((leaflet) => {
       if (cancelled || !containerRef.current) return;
       map = initMap(leaflet, containerRef.current, [latitude, longitude], 15);
-      leaflet.marker([latitude, longitude], { icon: activeMarkerIcon(leaflet) }).addTo(map).bindPopup(title);
+      leaflet.marker([latitude, longitude], { icon: createSimplePinIcon(leaflet, true) }).addTo(map).bindPopup(title);
     });
     return () => {
       cancelled = true;
@@ -352,14 +389,33 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
   const leafletRef = useRef<LeafletModule | null>(null);
   const mapRef = useRef<LeafletMapInstance | null>(null);
   const markerRefs = useRef<Map<string, LeafletMarkerInstance>>(new Map());
-  const collegeMarkerRefs = useRef<LeafletMarkerInstance[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isMapReady, setIsMapReady] = useState(false);
+  const [isCardDismissed, setIsCardDismissed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCat, setSelectedCat] = useState<string>("all");
+
   const mapped = useMemo(
     () => properties.filter((property) => property.latitude != null && property.longitude != null),
     [properties],
   );
-  const active = properties.find((property) => property.id === activeId) ?? mapped[0];
-  const mappedKey = useMemo(() => mapped.map((property) => property.id).join(","), [mapped]);
+
+  const filteredMapped = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return mapped.filter((p) => {
+      const matchesCat = selectedCat === "all" || p.category === selectedCat;
+      const matchesQ =
+        !q ||
+        p.title.toLowerCase().includes(q) ||
+        (p.locality && p.locality.toLowerCase().includes(q)) ||
+        (p.neighborhood && p.neighborhood.toLowerCase().includes(q)) ||
+        p.city.toLowerCase().includes(q);
+      return matchesCat && matchesQ;
+    });
+  }, [mapped, selectedCat, searchQuery]);
+
+  const active = properties.find((property) => property.id === activeId) ?? filteredMapped[0] ?? mapped[0];
+  const mappedKey = useMemo(() => filteredMapped.map((property) => property.id).join(","), [filteredMapped]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -369,6 +425,7 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
       if (cancelled || !containerRef.current || mapRef.current) return;
       leafletRef.current = leaflet;
       mapRef.current = initMap(leaflet, containerRef.current, DEFAULT_CENTER, 11);
+      setIsMapReady(true);
     });
 
     return () => {
@@ -377,104 +434,246 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
       mapRef.current = null;
       leafletRef.current = null;
       markerRefs.current.clear();
-      collegeMarkerRefs.current = [];
+      setIsMapReady(false);
     };
   }, []);
 
   useEffect(() => {
     const leaflet = leafletRef.current;
     const map = mapRef.current;
-    if (!leaflet || !map) return;
+    if (!leaflet || !map || !isMapReady) return;
 
     markerRefs.current.forEach((marker) => marker.remove());
     markerRefs.current.clear();
-    collegeMarkerRefs.current.forEach((marker) => marker.remove());
-    collegeMarkerRefs.current = [];
 
-    // 1. Plot College Campus Markers (Highest Z-Index)
-    COLLEGES.forEach((college) => {
-      if (college.latitude && college.longitude) {
-        const marker = leaflet
-          .marker([college.latitude, college.longitude], {
-            icon: collegeMarkerIcon(leaflet, college.shortName),
-            zIndexOffset: 1000,
-          })
-          .addTo(map);
-        marker.bindPopup(`<div style="font-family:sans-serif;font-size:12px;padding:2px 4px;"><strong>🎓 ${college.name}</strong><div style="font-size:10px;color:#666;margin-top:2px;">${college.areaName}, Dehradun</div></div>`);
-        collegeMarkerRefs.current.push(marker);
-      }
-    });
+    const currentActiveId = activeId ?? filteredMapped[0]?.id;
 
-    // 2. Plot Property Markers
-    mapped.forEach((property) => {
+    filteredMapped.forEach((property) => {
+      const isSelected = property.id === currentActiveId;
       const marker = leaflet
         .marker([property.latitude!, property.longitude!], {
-          icon: markerIcon(leaflet),
+          icon: createPropertyPinIcon(leaflet, property, isSelected),
+          zIndexOffset: isSelected ? 1000 : 0,
         })
         .addTo(map);
-      marker.on("click", () => setActiveId(property.id));
+
+      marker.on("click", () => {
+        setActiveId(property.id);
+        setIsCardDismissed(false);
+      });
       markerRefs.current.set(property.id, marker);
     });
 
-    if (mapped.length > 0) {
-      const bounds = leaflet.latLngBounds(mapped.map((property) => [property.latitude!, property.longitude!]));
-      map.fitBounds(bounds, { padding: [32, 32], maxZoom: 14 });
+    if (filteredMapped.length > 0) {
+      const bounds = leaflet.latLngBounds(filteredMapped.map((property) => [property.latitude!, property.longitude!]));
+      map.fitBounds(bounds, { padding: [48, 48], maxZoom: 14 });
     }
-  }, [mapped, mappedKey]);
+  }, [isMapReady, filteredMapped, mappedKey]);
 
   useEffect(() => {
     const leaflet = leafletRef.current;
     if (!leaflet) return;
+    const currentActiveId = activeId ?? filteredMapped[0]?.id;
     markerRefs.current.forEach((marker, id) => {
-      marker.setIcon(id === activeId ? activeMarkerIcon(leaflet) : markerIcon(leaflet));
+      const prop = filteredMapped.find((p) => p.id === id);
+      if (prop) {
+        const isSelected = id === currentActiveId;
+        marker.setIcon(createPropertyPinIcon(leaflet, prop, isSelected));
+        marker.setZIndexOffset(isSelected ? 1000 : 0);
+      }
     });
-  }, [activeId]);
+  }, [activeId, filteredMapped]);
 
   const highlight = (property: Property) => {
     setActiveId(property.id);
-    mapRef.current?.setView([property.latitude!, property.longitude!], 15);
+    setIsCardDismissed(false);
+    if (property.latitude != null && property.longitude != null && mapRef.current) {
+      mapRef.current.setView([property.latitude, property.longitude], 15, {
+        animate: true,
+      });
+    }
   };
 
   return (
-    <div className="grid min-h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(360px,430px)_1fr]">
-      <aside className="border-r border-border bg-background overflow-y-auto max-h-[45dvh] lg:max-h-[calc(100dvh-4rem)]">
-        <div className="p-4 border-b border-border">
-          <p className="text-mono-eyebrow mb-2">{mapped.length} mapped listings</p>
-          <h1 className="font-display text-3xl tracking-tight">Search by map</h1>
+    <div className="grid min-h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(360px,440px)_1fr]">
+      <aside className="border-r border-border bg-background overflow-y-auto max-h-[48dvh] lg:max-h-[calc(100dvh-4rem)] flex flex-col">
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-border space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-mono-eyebrow">{filteredMapped.length} mapped spaces</p>
+              <h1 className="font-display text-2xl font-bold tracking-tight mt-0.5">Search by map</h1>
+            </div>
+            <Link
+              to="/explore"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-border bg-surface hover:bg-surface-hi text-xs font-mono uppercase tracking-wider rounded-sm transition-colors text-muted-foreground hover:text-foreground"
+            >
+              <LayoutGrid className="size-3.5" />
+              <span>Grid View</span>
+            </Link>
+          </div>
+
+          {/* Quick Search */}
+          <div className="relative">
+            <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search locality or area..."
+              className="w-full pl-8 pr-7 py-2 bg-surface border border-border text-xs rounded-sm focus:outline-none focus:border-accent text-foreground placeholder:text-muted-foreground/60"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Category Filter Chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+            {[
+              { id: "all", label: "All" },
+              { id: "pg", label: "PG / Hostels" },
+              { id: "apartment", label: "Apartments" },
+              { id: "studio", label: "Studios" },
+            ].map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setSelectedCat(c.id)}
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-medium rounded-full border transition-colors shrink-0",
+                  selectedCat === c.id
+                    ? "bg-foreground text-background border-foreground font-semibold"
+                    : "bg-surface border-border text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="divide-y divide-border">
-          {properties.length === 0 && <p className="p-5 text-sm text-muted-foreground">No listings match this search yet.</p>}
-          {properties.map((property) => (
+
+        {/* Listings List */}
+        <div className="divide-y divide-border overflow-y-auto flex-1">
+          {filteredMapped.length === 0 && (
+            <div className="p-6 text-center text-sm text-muted-foreground space-y-2">
+              <p>No listings match your map filter.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCat("all");
+                }}
+                className="text-xs text-accent underline font-semibold"
+              >
+                Reset filters
+              </button>
+            </div>
+          )}
+          {filteredMapped.map((property) => (
             <button
               key={property.id}
               type="button"
               onClick={() => property.latitude != null && property.longitude != null && highlight(property)}
-              className={cn("w-full text-left p-4 hover:bg-surface-hi transition-colors", active?.id === property.id && "bg-surface-hi")}
+              className={cn(
+                "w-full text-left p-3.5 hover:bg-surface-hi transition-colors flex items-center gap-3",
+                active?.id === property.id && "bg-surface-hi border-l-2 border-accent"
+              )}
             >
-              <p className="text-sm font-semibold">{property.title}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {[property.locality ?? property.neighborhood, property.city].filter(Boolean).join(", ")}
-              </p>
-              <p className="font-display text-lg font-bold mt-2">{formatCurrency(property.price)}</p>
+              <div className="size-16 rounded-sm overflow-hidden border border-border shrink-0 bg-surface">
+                <ProgressiveImage
+                  src={property.image || property.images?.[0]?.url || property.gallery?.[0] || ""}
+                  alt={property.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-[10px] font-mono uppercase text-accent font-semibold">
+                    {property.categoryLabel || property.category}
+                  </span>
+                  {property.verified && (
+                    <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                      <ShieldCheck className="size-2.5 text-accent" /> Verified
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm font-semibold truncate text-foreground mt-0.5">{property.title}</p>
+                <p className="text-xs text-muted-foreground truncate mt-0.5">
+                  {[property.locality ?? property.neighborhood, property.city].filter(Boolean).join(", ")}
+                </p>
+                <p className="font-display text-sm font-bold text-foreground mt-1">
+                  {formatCurrency(property.price)} <span className="text-[10px] font-normal text-muted-foreground">/mo</span>
+                </p>
+              </div>
             </button>
           ))}
         </div>
       </aside>
       <section className="relative min-h-[55dvh] lg:min-h-0">
         <div ref={containerRef} className="absolute inset-0 bg-surface" />
-        {active && (
-          <div className="absolute left-4 right-4 bottom-4 sm:left-auto sm:w-80 border border-border bg-background p-4 shadow-xl">
-            <p className="text-sm font-semibold">{active.title}</p>
-            <p className="text-xs text-muted-foreground mt-1">{active.formattedAddress ?? active.address}</p>
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <span className="font-display text-xl font-bold">{formatCurrency(active.price)}</span>
-              <Link
-                to="/listing/$slug"
-                params={{ slug: active.slug }}
-                className="bg-foreground text-background px-3 py-2 text-xs font-bold uppercase tracking-widest rounded-sm"
+        {active && !isCardDismissed && (
+          <div className="absolute right-4 bottom-6 left-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-88 md:w-96 z-[1001] pointer-events-auto">
+            <div className="relative border border-border bg-card/95 backdrop-blur-md shadow-2xl rounded-md overflow-hidden flex flex-col sm:flex-row gap-3 p-3 text-foreground">
+              <button
+                type="button"
+                onClick={() => setIsCardDismissed(true)}
+                className="absolute top-2 right-2 z-20 size-6 rounded-full bg-background/80 hover:bg-background text-muted-foreground hover:text-foreground grid place-items-center transition-colors shadow-sm"
+                aria-label="Close card"
               >
-                View
-              </Link>
+                <X className="size-3.5" />
+              </button>
+
+              <div className="relative w-full sm:w-32 h-28 sm:h-auto rounded-sm overflow-hidden border border-border/60 shrink-0 bg-surface">
+                <ProgressiveImage
+                  src={active.image || active.images?.[0]?.url || active.gallery?.[0] || ""}
+                  alt={active.title}
+                  className="w-full h-full object-cover"
+                />
+                {active.verified && (
+                  <span className="absolute bottom-1 left-1 bg-accent text-accent-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-[2px] flex items-center gap-1 shadow-sm">
+                    <ShieldCheck className="size-2.5" /> Verified
+                  </span>
+                )}
+              </div>
+
+              <div className="flex-1 flex flex-col justify-between min-w-0 pr-6 sm:pr-4">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold">
+                    {active.categoryLabel || active.category}
+                  </span>
+                  <p className="text-sm font-semibold truncate text-foreground mt-0.5" title={active.title}>
+                    {active.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-1">
+                    <MapPin className="size-3 shrink-0" />
+                    <span>{[active.locality ?? active.neighborhood, active.city].filter(Boolean).join(", ")}</span>
+                  </p>
+                </div>
+
+                <div className="mt-2.5 pt-2 border-t border-border/60 flex items-center justify-between gap-2">
+                  <div>
+                    <span className="font-display text-base font-bold text-foreground">
+                      {formatCurrency(active.price)}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground ml-1">/mo</span>
+                  </div>
+                  <Link
+                    to="/listing/$slug"
+                    params={{ slug: active.slug }}
+                    className="inline-flex items-center gap-1 bg-foreground text-background hover:bg-accent hover:text-accent-foreground px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider rounded-sm transition-colors"
+                  >
+                    <span>View</span>
+                    <ArrowRight className="size-3" />
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         )}

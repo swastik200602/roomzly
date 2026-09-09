@@ -6,10 +6,17 @@ import { notificationService } from "@/modules/notifications/notifications.servi
 import { emitToUser } from "@/socket/socket.js";
 import type { CreateBookingInput } from "@/schemas/bookings.schema.js";
 
-function nightsBetween(checkIn: Date, checkOut: Date): number {
+export function nightsBetween(checkIn: Date, checkOut: Date): number {
   const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
   if (nights <= 0) throw badRequest("checkOut must be after checkIn");
   return nights;
+}
+
+export function isBookingConflicting(
+  existing: { checkIn: Date; checkOut: Date },
+  requested: { checkIn: Date; checkOut: Date }
+): boolean {
+  return existing.checkIn < requested.checkOut && existing.checkOut > requested.checkIn;
 }
 
 export const bookingService = {

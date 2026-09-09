@@ -3,8 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  Building2,
+  ChevronDown,
   GitCompare,
   GraduationCap,
+  IndianRupee,
   KeyRound,
   MapPin,
   Search as SearchIcon,
@@ -137,22 +140,23 @@ function Hero({ facets }: { facets?: PropertyFacets }) {
 
           <form onSubmit={onSearch} className="mt-10 max-w-5xl border border-border bg-surface p-2 text-left">
             <div className="grid grid-cols-1 gap-px bg-border md:grid-cols-[1.2fr_1fr_1fr_1fr_auto]">
-              <label className="bg-background p-4">
+              <label className="bg-background p-4 cursor-pointer">
                 <span className="mb-1 block text-[10px] font-mono uppercase text-muted-foreground">College</span>
                 <div className="flex items-center gap-2">
                   <GraduationCap className="size-3.5 shrink-0 text-muted-foreground" />
                   <select
                     value={collegeSlug}
                     onChange={(event) => setCollegeSlug(event.target.value)}
-                    className="w-full appearance-none bg-transparent text-sm font-medium focus:outline-none"
+                    className="w-full cursor-pointer appearance-none bg-transparent text-sm font-medium focus:outline-none"
                   >
-                    <option value="">Any campus</option>
+                    <option value="" className="bg-[#121417] text-[#f3f4f6]">Any campus</option>
                     {COLLEGES.map((college) => (
-                      <option key={college.slug} value={college.slug}>
+                      <option key={college.slug} value={college.slug} className="bg-[#121417] text-[#f3f4f6]">
                         {college.shortName}
                       </option>
                     ))}
                   </select>
+                  <ChevronDown className="size-3.5 shrink-0 text-muted-foreground pointer-events-none" />
                 </div>
               </label>
               <label className="bg-background p-4">
@@ -168,33 +172,41 @@ function Hero({ facets }: { facets?: PropertyFacets }) {
                   />
                 </div>
               </label>
-              <label className="bg-background p-4">
+              <label className="bg-background p-4 cursor-pointer">
                 <span className="mb-1 block text-[10px] font-mono uppercase text-muted-foreground">Type</span>
-                <select
-                  value={category}
-                  onChange={(event) => setCategory(event.target.value)}
-                  className="w-full appearance-none bg-transparent text-sm font-medium focus:outline-none"
-                >
-                  <option value="">Any stay</option>
-                  {CATEGORIES.map((item) => (
-                    <option key={item.key} value={item.key}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-2">
+                  <Building2 className="size-3.5 shrink-0 text-muted-foreground" />
+                  <select
+                    value={category}
+                    onChange={(event) => setCategory(event.target.value)}
+                    className="w-full cursor-pointer appearance-none bg-transparent text-sm font-medium focus:outline-none"
+                  >
+                    <option value="" className="bg-[#121417] text-[#f3f4f6]">Any stay</option>
+                    {CATEGORIES.map((item) => (
+                      <option key={item.key} value={item.key} className="bg-[#121417] text-[#f3f4f6]">
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="size-3.5 shrink-0 text-muted-foreground pointer-events-none" />
+                </div>
               </label>
-              <label className="bg-background p-4">
+              <label className="bg-background p-4 cursor-pointer">
                 <span className="mb-1 block text-[10px] font-mono uppercase text-muted-foreground">Budget</span>
-                <select
-                  value={budget}
-                  onChange={(event) => setBudget(event.target.value)}
-                  className="w-full appearance-none bg-transparent text-sm font-medium focus:outline-none"
-                >
-                  <option value="">Any budget</option>
-                  <option value="9000">Up to {formatCurrency(9000)}</option>
-                  <option value="15000">Up to {formatCurrency(15000)}</option>
-                  <option value="25000">Up to {formatCurrency(25000)}</option>
-                </select>
+                <div className="flex items-center gap-2">
+                  <IndianRupee className="size-3.5 shrink-0 text-muted-foreground" />
+                  <select
+                    value={budget}
+                    onChange={(event) => setBudget(event.target.value)}
+                    className="w-full cursor-pointer appearance-none bg-transparent text-sm font-medium focus:outline-none"
+                  >
+                    <option value="" className="bg-[#121417] text-[#f3f4f6]">Any budget</option>
+                    <option value="9000" className="bg-[#121417] text-[#f3f4f6]">Up to {formatCurrency(9000)}</option>
+                    <option value="15000" className="bg-[#121417] text-[#f3f4f6]">Up to {formatCurrency(15000)}</option>
+                    <option value="25000" className="bg-[#121417] text-[#f3f4f6]">Up to {formatCurrency(25000)}</option>
+                  </select>
+                  <ChevronDown className="size-3.5 shrink-0 text-muted-foreground pointer-events-none" />
+                </div>
               </label>
               <div className="bg-background p-2">
                 <button
@@ -207,6 +219,58 @@ function Hero({ facets }: { facets?: PropertyFacets }) {
               </div>
             </div>
           </form>
+
+          {/* Quick campus & map discovery chips */}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-mono uppercase text-white/50 tracking-wider mr-1">Popular:</span>
+            <Link
+              to="/search-map"
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent/20 hover:bg-accent/30 border border-accent/40 rounded-full text-xs font-semibold text-accent backdrop-blur-sm transition-colors"
+            >
+              <MapPin className="size-3 text-accent" />
+              <span>Explore on Map</span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setCollegeSlug("upes-bidholi");
+                navigate({ to: "/explore", search: { collegeSlug: "upes-bidholi" } as never });
+              }}
+              className="px-2.5 py-1 bg-black/40 hover:bg-black/60 border border-white/20 rounded-full text-xs text-white/80 transition-colors"
+            >
+              UPES Bidholi
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCollegeSlug("geu-clement-town");
+                navigate({ to: "/explore", search: { collegeSlug: "geu-clement-town" } as never });
+              }}
+              className="px-2.5 py-1 bg-black/40 hover:bg-black/60 border border-white/20 rounded-full text-xs text-white/80 transition-colors"
+            >
+              Graphic Era
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCollegeSlug("dit-mussoorie-diversion");
+                navigate({ to: "/explore", search: { collegeSlug: "dit-mussoorie-diversion" } as never });
+              }}
+              className="px-2.5 py-1 bg-black/40 hover:bg-black/60 border border-white/20 rounded-full text-xs text-white/80 transition-colors"
+            >
+              DIT University
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setLocation("Prem Nagar");
+                navigate({ to: "/explore", search: { q: "Prem Nagar" } as never });
+              }}
+              className="px-2.5 py-1 bg-black/40 hover:bg-black/60 border border-white/20 rounded-full text-xs text-white/80 transition-colors"
+            >
+              Prem Nagar PG Hub
+            </button>
+          </div>
 
           <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
             <QuickStat label="Verified listings" value={(facets?.verified ?? 0).toLocaleString()} />

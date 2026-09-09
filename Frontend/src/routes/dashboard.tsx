@@ -45,6 +45,7 @@ function DashboardLayout() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -192,13 +193,23 @@ function DashboardLayout() {
             >
               <Menu className="size-4" />
             </button>
-            <div className="flex items-center gap-2 flex-1 max-w-md">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (searchQuery.trim()) {
+                  navigate({ to: "/explore", search: { q: searchQuery.trim() } });
+                }
+              }}
+              className="flex items-center gap-2 flex-1 max-w-md"
+            >
               <Search className="size-4 text-muted-foreground shrink-0" />
               <input
-                placeholder="Search listings…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search rentals near colleges…"
                 className="bg-transparent text-sm w-full focus:outline-none placeholder:text-muted-foreground/60"
               />
-            </div>
+            </form>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
             <ThemeToggle />

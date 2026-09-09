@@ -9,6 +9,14 @@ import { useAuth } from "@/stores/auth";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/dashboard/admin")({
   head: () => ({ meta: [{ title: "Admin - Roomzly" }] }),
@@ -447,12 +455,73 @@ function AdminVerification({
   pending: boolean;
   onReview: (input: { id: string; property?: boolean; payload: { status: AdminVerificationDocument["status"]; rejectionReason?: string } }) => void;
 }) {
+  const [resubmitTarget, setResubmitTarget] = useState<{ id: string; property: boolean } | null>(null);
+  const [resubmitReason, setResubmitReason] = useState("");
+
   const all = [
     ...documents.map((document) => ({ ...document, scope: "Owner" as const })),
     ...propertyDocuments.map((document) => ({ ...document, scope: "Property" as const })),
   ];
   return (
     <div className="border border-border rounded-sm overflow-x-auto">
+      <Dialog
+        open={!!resubmitTarget}
+        onOpenChange={(open) => {
+          if (!open) {
+            setResubmitTarget(null);
+            setResubmitReason("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md bg-background border border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display text-lg">Request Document Resubmission</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Provide a clear reason why this document needs resubmission (e.g. illegible photo, expired utility bill).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <textarea
+              value={resubmitReason}
+              onChange={(e) => setResubmitReason(e.target.value)}
+              placeholder="Enter reason for resubmission request..."
+              rows={3}
+              className="w-full bg-surface-hi border border-border rounded-sm p-2.5 text-sm outline-none focus:border-accent text-foreground resize-none"
+            />
+          </div>
+          <DialogFooter className="flex gap-2 justify-end">
+            <button
+              type="button"
+              onClick={() => {
+                setResubmitTarget(null);
+                setResubmitReason("");
+              }}
+              className="px-3 py-1.5 border border-border rounded-sm font-mono text-xs uppercase tracking-wider hover:bg-surface-hi"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={!resubmitReason.trim() || pending}
+              onClick={() => {
+                if (resubmitTarget && resubmitReason.trim()) {
+                  onReview({
+                    id: resubmitTarget.id,
+                    property: resubmitTarget.property,
+                    payload: { status: "RESUBMISSION_REQUESTED", rejectionReason: resubmitReason.trim() },
+                  });
+                  setResubmitTarget(null);
+                  setResubmitReason("");
+                }
+              }}
+              className="px-3 py-1.5 bg-destructive text-destructive-foreground rounded-sm font-mono text-xs uppercase tracking-wider hover:opacity-90 disabled:opacity-50"
+            >
+              Request Resubmission
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="min-w-[980px]">
         <div className="grid grid-cols-[1.1fr_1fr_0.8fr_0.8fr_1.2fr] gap-4 px-5 py-3 bg-surface-hi border-b border-border font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           <div>Subject</div>
@@ -500,10 +569,7 @@ function AdminVerification({
               <button
                 type="button"
                 disabled={pending}
-                onClick={() => {
-                  const reason = window.prompt("Reason for rejection or resubmission");
-                  if (reason) onReview({ id: document.id, property: document.scope === "Property", payload: { status: "RESUBMISSION_REQUESTED", rejectionReason: reason } });
-                }}
+                onClick={() => setResubmitTarget({ id: document.id, property: document.scope === "Property" })}
                 className="px-2 py-1 border border-destructive/30 text-destructive rounded-sm font-mono text-[10px] uppercase tracking-widest hover:bg-destructive/10 disabled:opacity-50"
               >
                 Resubmit
@@ -528,8 +594,65 @@ function AdminReports({
   pending: boolean;
   onUpdate: (input: { id: string; payload: { status: AdminReport["status"]; resolution?: string } }) => void;
 }) {
+  const [resolveTarget, setResolveTarget] = useState<string | null>(null);
+  const [resolutionNote, setResolutionNote] = useState("");
+
   return (
     <div className="border border-border rounded-sm overflow-x-auto">
+      <Dialog
+        open={!!resolveTarget}
+        onOpenChange={(open) => {
+          if (!open) {
+            setResolveTarget(null);
+            setResolutionNote("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md bg-background border border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display text-lg">Resolve User Report</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Add resolution notes detailing the outcome of the investigation or actions taken.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <textarea
+              value={resolutionNote}
+              onChange={(e) => setResolutionNote(e.target.value)}
+              placeholder="Enter resolution notes (e.g. Warning issued to owner, listing details corrected)..."
+              rows={3}
+              className="w-full bg-surface-hi border border-border rounded-sm p-2.5 text-sm outline-none focus:border-accent text-foreground resize-none"
+            />
+          </div>
+          <DialogFooter className="flex gap-2 justify-end">
+            <button
+              type="button"
+              onClick={() => {
+                setResolveTarget(null);
+                setResolutionNote("");
+              }}
+              className="px-3 py-1.5 border border-border rounded-sm font-mono text-xs uppercase tracking-wider hover:bg-surface-hi"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={!resolutionNote.trim() || pending}
+              onClick={() => {
+                if (resolveTarget && resolutionNote.trim()) {
+                  onUpdate({ id: resolveTarget, payload: { status: "RESOLVED", resolution: resolutionNote.trim() } });
+                  setResolveTarget(null);
+                  setResolutionNote("");
+                }
+              }}
+              className="px-3 py-1.5 bg-accent text-accent-foreground rounded-sm font-mono text-xs uppercase tracking-wider hover:opacity-90 disabled:opacity-50"
+            >
+              Resolve Report
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="min-w-[980px]">
         <div className="grid grid-cols-[0.8fr_1.2fr_1fr_0.8fr_1.1fr] gap-4 px-5 py-3 bg-surface-hi border-b border-border font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           <div>Type</div>
@@ -563,10 +686,7 @@ function AdminReports({
               <button
                 type="button"
                 disabled={pending}
-                onClick={() => {
-                  const resolution = window.prompt("Resolution note");
-                  if (resolution) onUpdate({ id: report.id, payload: { status: "RESOLVED", resolution } });
-                }}
+                onClick={() => setResolveTarget(report.id)}
                 className="px-2 py-1 border border-accent/30 text-accent rounded-sm font-mono text-[10px] uppercase tracking-widest hover:bg-accent/10 disabled:opacity-50"
               >
                 Resolve

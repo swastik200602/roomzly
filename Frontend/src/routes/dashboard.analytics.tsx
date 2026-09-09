@@ -94,11 +94,11 @@ function AnalyticsPage() {
 
         <svg viewBox="0 0 600 200" className="w-full h-44 sm:h-56" preserveAspectRatio="none" role="img" aria-label="Revenue chart">
           {[0, 50, 100, 150, 200].map((y) => (
-            <line key={y} x1="0" x2="600" y1={y} y2={y} stroke="hsl(var(--border) / 0.6)" strokeWidth="0.5" />
+            <line key={y} x1="0" x2="600" y1={y} y2={y} stroke="var(--color-border)" strokeWidth="0.5" />
           ))}
           <polyline
             fill="none"
-            stroke="hsl(var(--accent))"
+            stroke="var(--color-accent)"
             strokeWidth="2"
             points={revenue.map((point, index) => `${(index / Math.max(1, revenue.length - 1)) * 600},${200 - (point.total / max) * 180}`).join(" ")}
           />
@@ -108,7 +108,7 @@ function AnalyticsPage() {
               cx={(index / Math.max(1, revenue.length - 1)) * 600}
               cy={200 - (point.total / max) * 180}
               r="2.5"
-              fill="hsl(var(--accent))"
+              fill="var(--color-accent)"
             />
           ))}
         </svg>

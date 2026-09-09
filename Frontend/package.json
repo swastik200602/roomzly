@@ -12,8 +12,6 @@
     "preview": "vite preview",
     "preview:firebase": "vite preview --config vite.firebase.config.ts --outDir dist/client",
     "inspect:deployed": "node scripts/inspect-firebase-build.mjs",
-    "probe:freeze": "node scripts/probe-production-freeze.mjs",
-    "debug:freeze": "node scripts/debug-renderer-freeze.mjs",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
