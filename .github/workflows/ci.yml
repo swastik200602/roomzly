@@ -15,9 +15,13 @@ jobs:
         working-directory: Backend
 
     env:
+      NODE_ENV: "test"
+      FRONTEND_URL: "https://roomzly.in"
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/roomzly_db"
       DIRECT_URL: "postgresql://postgres:postgres@localhost:5432/roomzly_db"
-      JWT_SECRET: "super-secret-key-for-testing-purposes-only-32bytes"
+      REDIS_URL: "redis://localhost:6379"
+      JWT_ACCESS_SECRET: "super-secret-access-token-key-for-roomzly-auth-32bytes"
+      JWT_REFRESH_SECRET: "super-secret-refresh-token-key-for-roomzly-auth-32bytes"
 
     steps:
       - name: Checkout repository
