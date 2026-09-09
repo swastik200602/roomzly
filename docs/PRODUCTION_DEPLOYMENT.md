@@ -32,7 +32,7 @@ All core production blockers have been addressed:
 | :--- | :--- | :--- |
 | `NODE_ENV` | Environment mode | `production` |
 | `PORT` | Web server port | Provided by Render or `4000` |
-| `FRONTEND_URL` | Primary frontend origin | `https://roomzly-hub.web.app` or custom domain |
+| `FRONTEND_URL` | Primary frontend origin | `https://roomzly.in` or `https://roomzly-hub.web.app` |
 | `ADDITIONAL_CORS_ORIGINS` | Extra allowed origins | Optional comma-separated list |
 | `DATABASE_URL` | Supabase PostgreSQL URI | `postgresql://postgres.[ref]:[pass]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true` |
 | `REDIS_URL` | Upstash Redis connection string | `rediss://default:[token]@[endpoint]:6379` |
@@ -61,7 +61,7 @@ All core production blockers have been addressed:
 ## Render Backend Guide
 
 1. **Create Web Service**:
-   - Link repository: `https://github.com/swastik200602/roomzly-hub`
+   - Link repository: `https://github.com/swastik200602/roomzly`
    - Root Directory: `Backend`
    - Environment: `Node`
 2. **Configure Build & Start Commands**:

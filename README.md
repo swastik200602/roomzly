@@ -20,10 +20,11 @@
 
 | Component | Status | Production Link |
 | :--- | :--- | :--- |
+| **Live Web App** | ![Live](https://img.shields.io/badge/Production-Live-brightgreen) | [`https://roomzly.in`](https://roomzly.in/) |
 | **Backend API** | ![Operational](https://img.shields.io/badge/Status-Operational-brightgreen) | [`https://roomzly-backend.onrender.com`](https://roomzly-backend.onrender.com) |
 | **API Healthcheck** | ![Healthy](https://img.shields.io/badge/Health-200_OK-brightgreen) | [`https://roomzly-backend.onrender.com/health`](https://roomzly-backend.onrender.com/health) |
 | **Ready & DB Probe** | ![Ready](https://img.shields.io/badge/Readiness-Ready-brightgreen) | [`https://roomzly-backend.onrender.com/ready`](https://roomzly-backend.onrender.com/ready) |
-| **Sample Endpoint** | ![JSON](https://img.shields.io/badge/Properties-6_Listings-blue) | [`https://roomzly-backend.onrender.com/api/v1/properties`](https://roomzly-backend.onrender.com/api/v1/properties) |
+| **Sample Endpoint** | ![JSON](https://img.shields.io/badge/Properties-API-blue) | [`https://roomzly-backend.onrender.com/api/v1/properties`](https://roomzly-backend.onrender.com/api/v1/properties) |
 
 ---
 
@@ -137,9 +138,9 @@ roomzly/
 
 ---
 
-## 🔑 Demo & Test Credentials
-
-For quick evaluation, seed data can be initialized with these pre-configured user personas:
+## 🔑 Demo Credentials — Evaluation Only
+ 
+> **Notice for Evaluators:** These pre-configured accounts are active on the live deployed system ([roomzly.in](https://roomzly.in/)) and pre-seeded in the database for testing role-specific workflows (Resident, Owner, Admin). They contain strictly synthetic demo data.
 
 | Role | Email | Password | Permissions |
 | :--- | :--- | :--- | :--- |
@@ -153,8 +154,8 @@ For quick evaluation, seed data can be initialized with these pre-configured use
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/swastik200602/roomzly-hub.git
-cd roomzly-hub
+git clone https://github.com/swastik200602/roomzly.git
+cd roomzly
 ```
 
 ### 2. Backend Setup
@@ -186,6 +187,25 @@ npm install
 npm run dev
 ```
 Frontend client will be available at `http://localhost:5173`.
+
+---
+
+## 🧪 Testing & Verification
+
+Run automated test suites and production builds locally:
+
+```bash
+# Run Backend Unit & Integration Tests (Vitest)
+cd Backend
+npm test
+
+# Verify Backend Build
+npm run build
+
+# Verify Frontend Production Build (Vite)
+cd ../Frontend
+npm run build
+```
 
 ---
 
