@@ -1,11 +1,11 @@
 import "leaflet/dist/leaflet.css";
 
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Crosshair, LayoutGrid, LoaderCircle, MapPin, Search, ShieldCheck, X } from "lucide-react";
+import { ArrowRight, Crosshair, GraduationCap, LayoutGrid, LoaderCircle, MapPin, Navigation, Search, ShieldCheck, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ProgressiveImage } from "@/components/property/ProgressiveImage";
-import { COLLEGES } from "@/lib/college-discovery";
+import { COLLEGES, calculateHaversineDistance, calculateWalkingMinutes } from "@/lib/college-discovery";
 import { formatCurrency } from "@/lib/currency";
 import type { Property, PropertyCollegeMatch } from "@/lib/properties";
 import { cn } from "@/lib/utils";
@@ -474,11 +474,28 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
   const mapRef = useRef<LeafletMapInstance | null>(null);
   const markerRefs = useRef<Map<string, LeafletMarkerInstance>>(new Map());
   const collegeMarkerRefs = useRef<LeafletMarkerInstance[]>([]);
+  const polylineRef = useRef<any>(null);
+  const routeBadgeMarkerRef = useRef<LeafletMarkerInstance | null>(null);
+
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isMapReady, setIsMapReady] = useState(false);
   const [isCardDismissed, setIsCardDismissed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCat, setSelectedCat] = useState<string>("all");
+  const [selectedCollegeSlug, setSelectedCollegeSlug] = useState<string>("all");
+
+  const getClosestCollege = (propLat: number, propLng: number) => {
+    let minDistance = Infinity;
+    let closest = COLLEGES[0];
+    for (const c of COLLEGES) {
+      const d = calculateHaversineDistance(propLat, propLng, c.latitude, c.longitude);
+      if (d < minDistance) {
+        minDistance = d;
+        closest = c;
+      }
+    }
+    return { college: closest, distanceKm: minDistance };
+  };
 
   const mapped = useMemo(
     () => properties.filter((property) => property.latitude != null && property.longitude != null),
@@ -487,7 +504,7 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
 
   const filteredMapped = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return mapped.filter((p) => {
+    const list = mapped.filter((p) => {
       const matchesCat = selectedCat === "all" || p.category === selectedCat;
       const matchesQ =
         !q ||
@@ -497,9 +514,33 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
         p.city.toLowerCase().includes(q);
       return matchesCat && matchesQ;
     });
-  }, [mapped, selectedCat, searchQuery]);
 
-  const active = properties.find((property) => property.id === activeId) ?? filteredMapped[0] ?? mapped[0];
+    const targetCollege = selectedCollegeSlug !== "all"
+      ? COLLEGES.find((c) => c.slug === selectedCollegeSlug)
+      : null;
+
+    const enriched = list.map((p) => {
+      const college = targetCollege ?? getClosestCollege(p.latitude!, p.longitude!).college;
+      const distanceKm = calculateHaversineDistance(p.latitude!, p.longitude!, college.latitude, college.longitude);
+      const walkingMinutes = calculateWalkingMinutes(distanceKm);
+      const distanceStr = distanceKm < 1 ? `${Math.round(distanceKm * 1000)} m` : `${distanceKm} km`;
+      return {
+        ...p,
+        targetCollege: college,
+        distanceKm,
+        walkingMinutes,
+        distanceStr,
+      };
+    });
+
+    if (selectedCollegeSlug !== "all") {
+      enriched.sort((a, b) => a.distanceKm - b.distanceKm);
+    }
+
+    return enriched;
+  }, [mapped, selectedCat, searchQuery, selectedCollegeSlug]);
+
+  const active = filteredMapped.find((property) => property.id === activeId) ?? filteredMapped[0] ?? mapped[0];
   const mappedKey = useMemo(() => filteredMapped.map((property) => property.id).join(","), [filteredMapped]);
 
   useEffect(() => {
@@ -515,6 +556,8 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
 
     return () => {
       cancelled = true;
+      polylineRef.current?.remove();
+      routeBadgeMarkerRef.current?.remove();
       mapRef.current?.remove();
       mapRef.current = null;
       leafletRef.current = null;
@@ -524,6 +567,7 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
     };
   }, []);
 
+  // College Landmark Markers
   useEffect(() => {
     const leaflet = leafletRef.current;
     const map = mapRef.current;
@@ -533,10 +577,11 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
     collegeMarkerRefs.current = [];
 
     COLLEGES.forEach((college) => {
+      const isSelected = selectedCollegeSlug === college.slug;
       const marker = leaflet
         .marker([college.latitude, college.longitude], {
           icon: createCollegePinIcon(leaflet, college.shortName),
-          zIndexOffset: 250,
+          zIndexOffset: isSelected ? 400 : 250,
         })
         .addTo(map);
 
@@ -548,6 +593,10 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
         `</div>`,
       );
 
+      marker.on("click", () => {
+        setSelectedCollegeSlug(college.slug);
+      });
+
       collegeMarkerRefs.current.push(marker);
     });
 
@@ -555,8 +604,9 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
       collegeMarkerRefs.current.forEach((m) => m.remove());
       collegeMarkerRefs.current = [];
     };
-  }, [isMapReady]);
+  }, [isMapReady, selectedCollegeSlug]);
 
+  // Property Markers
   useEffect(() => {
     const leaflet = leafletRef.current;
     const map = mapRef.current;
@@ -565,7 +615,7 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
     markerRefs.current.forEach((marker) => marker.remove());
     markerRefs.current.clear();
 
-    const currentActiveId = activeId ?? filteredMapped[0]?.id;
+    const currentActiveId = active?.id ?? filteredMapped[0]?.id;
 
     filteredMapped.forEach((property) => {
       const isSelected = property.id === currentActiveId;
@@ -583,16 +633,17 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
       markerRefs.current.set(property.id, marker);
     });
 
-    if (filteredMapped.length > 0) {
+    if (filteredMapped.length > 0 && selectedCollegeSlug === "all") {
       const bounds = leaflet.latLngBounds(filteredMapped.map((property) => [property.latitude!, property.longitude!]));
       map.fitBounds(bounds, { padding: [48, 48], maxZoom: 14 });
     }
   }, [isMapReady, filteredMapped, mappedKey]);
 
+  // Marker icon update on active change
   useEffect(() => {
     const leaflet = leafletRef.current;
     if (!leaflet) return;
-    const currentActiveId = activeId ?? filteredMapped[0]?.id;
+    const currentActiveId = active?.id ?? filteredMapped[0]?.id;
     markerRefs.current.forEach((marker, id) => {
       const prop = filteredMapped.find((p) => p.id === id);
       if (prop) {
@@ -601,7 +652,79 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
         marker.setZIndexOffset(isSelected ? 1000 : 0);
       }
     });
-  }, [activeId, filteredMapped]);
+  }, [active?.id, filteredMapped]);
+
+  // Interactive Walking Polyline between Active Property and College
+  useEffect(() => {
+    const leaflet = leafletRef.current;
+    const map = mapRef.current;
+    if (!leaflet || !map || !isMapReady || !active || active.latitude == null || active.longitude == null) {
+      polylineRef.current?.remove();
+      polylineRef.current = null;
+      routeBadgeMarkerRef.current?.remove();
+      routeBadgeMarkerRef.current = null;
+      return;
+    }
+
+    polylineRef.current?.remove();
+    polylineRef.current = null;
+    routeBadgeMarkerRef.current?.remove();
+    routeBadgeMarkerRef.current = null;
+
+    const targetCollege = selectedCollegeSlug !== "all"
+      ? COLLEGES.find((c) => c.slug === selectedCollegeSlug)
+      : (active as any).targetCollege ?? getClosestCollege(active.latitude, active.longitude).college;
+
+    if (!targetCollege) return;
+
+    const distKm = calculateHaversineDistance(active.latitude, active.longitude, targetCollege.latitude, targetCollege.longitude);
+    const walkMin = calculateWalkingMinutes(distKm);
+    const distStr = distKm < 1 ? `${Math.round(distKm * 1000)} m` : `${distKm} km`;
+
+    // Draw dashed walking polyline
+    const polyline = (leaflet as any).polyline(
+      [
+        [active.latitude, active.longitude],
+        [targetCollege.latitude, targetCollege.longitude],
+      ],
+      {
+        color: "#2563eb",
+        weight: 3.5,
+        dashArray: "6, 8",
+        opacity: 0.9,
+      },
+    ).addTo(map);
+
+    polylineRef.current = polyline;
+
+    // Midpoint walking badge marker
+    const midLat = (active.latitude + targetCollege.latitude) / 2;
+    const midLng = (active.longitude + targetCollege.longitude) / 2;
+
+    const badgeHtml = `
+      <div style="background:#0f172a;color:#ffffff;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;box-shadow:0 4px 12px rgba(0,0,0,0.35);border:1px solid #3b82f6;white-space:nowrap;transform:translate(-50%, -50%);font-family:system-ui,-apple-system,sans-serif;">
+        <span>🚶 ${distStr}</span>
+        <span style="color:#93c5fd;font-weight:500;">(~${walkMin}m)</span>
+      </div>
+    `;
+
+    const badgeMarker = leaflet.marker([midLat, midLng], {
+      icon: leaflet.divIcon({
+        className: "walking-route-badge",
+        html: badgeHtml,
+        iconSize: [110, 24],
+        iconAnchor: [55, 12],
+      }),
+      zIndexOffset: 950,
+    }).addTo(map);
+
+    routeBadgeMarkerRef.current = badgeMarker;
+
+    return () => {
+      polyline.remove();
+      badgeMarker.remove();
+    };
+  }, [active?.id, active?.latitude, active?.longitude, selectedCollegeSlug, isMapReady]);
 
   const highlight = (property: Property) => {
     setActiveId(property.id);
@@ -612,6 +735,26 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
       });
     }
   };
+
+  const handleCollegeChange = (slug: string) => {
+    setSelectedCollegeSlug(slug);
+    if (!mapRef.current || !leafletRef.current) return;
+    if (slug === "all") {
+      if (filteredMapped.length > 0) {
+        const bounds = leafletRef.current.latLngBounds(
+          filteredMapped.map((p) => [p.latitude!, p.longitude!]),
+        );
+        mapRef.current.fitBounds(bounds, { padding: [48, 48], maxZoom: 14 });
+      }
+    } else {
+      const college = COLLEGES.find((c) => c.slug === slug);
+      if (college) {
+        mapRef.current.setView([college.latitude, college.longitude], 14, { animate: true });
+      }
+    }
+  };
+
+  const activeMatch = active as any;
 
   return (
     <div className="grid min-h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(360px,440px)_1fr]">
@@ -630,6 +773,28 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
               <LayoutGrid className="size-3.5" />
               <span>Grid View</span>
             </Link>
+          </div>
+
+          {/* College Selector Filter */}
+          <div className="space-y-1">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+              <GraduationCap className="size-3.5 text-accent" />
+              <span>Filter near Campus</span>
+            </label>
+            <div className="relative">
+              <select
+                value={selectedCollegeSlug}
+                onChange={(e) => handleCollegeChange(e.target.value)}
+                className="w-full bg-surface border border-border text-xs rounded-sm py-2 pl-3 pr-8 text-foreground focus:outline-none focus:border-accent font-medium cursor-pointer"
+              >
+                <option value="all">🎓 All Dehradun Campuses</option>
+                {COLLEGES.map((c) => (
+                  <option key={c.slug} value={c.slug}>
+                    🎓 {c.name} ({c.locality || c.areaName})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Quick Search */}
@@ -669,7 +834,7 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
                   "px-2.5 py-1 text-[11px] font-medium rounded-full border transition-colors shrink-0",
                   selectedCat === c.id
                     ? "bg-foreground text-background border-foreground font-semibold"
-                    : "bg-surface border-border text-muted-foreground hover:text-foreground"
+                    : "bg-surface border-border text-muted-foreground hover:text-foreground",
                 )}
               >
                 {c.label}
@@ -688,6 +853,7 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
                 onClick={() => {
                   setSearchQuery("");
                   setSelectedCat("all");
+                  setSelectedCollegeSlug("all");
                 }}
                 className="text-xs text-accent underline font-semibold"
               >
@@ -702,7 +868,7 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
               onClick={() => property.latitude != null && property.longitude != null && highlight(property)}
               className={cn(
                 "w-full text-left p-3.5 hover:bg-surface-hi transition-colors flex items-center gap-3",
-                active?.id === property.id && "bg-surface-hi border-l-2 border-accent"
+                active?.id === property.id && "bg-surface-hi border-l-2 border-accent",
               )}
             >
               <div className="size-16 rounded-sm overflow-hidden border border-border shrink-0 bg-surface">
@@ -727,6 +893,15 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
                 <p className="text-xs text-muted-foreground truncate mt-0.5">
                   {[property.locality ?? property.neighborhood, property.city].filter(Boolean).join(", ")}
                 </p>
+
+                {/* College Proximity Badge */}
+                {property.targetCollege && (
+                  <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+                    <GraduationCap className="size-3 shrink-0" />
+                    <span>{property.distanceStr} to {property.targetCollege.shortName} (~{property.walkingMinutes}m)</span>
+                  </p>
+                )}
+
                 <p className="font-display text-sm font-bold text-foreground mt-1">
                   {formatCurrency(property.price)} <span className="text-[10px] font-normal text-muted-foreground">/mo</span>
                 </p>
@@ -735,8 +910,25 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
           ))}
         </div>
       </aside>
+
       <section className="relative min-h-[55dvh] lg:min-h-0">
         <div ref={containerRef} className="absolute inset-0 bg-surface" />
+
+        {/* Selected Campus Floating Tag */}
+        {selectedCollegeSlug !== "all" && (
+          <div className="absolute top-4 left-4 z-[1001] bg-background/90 backdrop-blur-md border border-border px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2 text-xs font-semibold">
+            <span className="size-2 rounded-full bg-accent animate-pulse" />
+            <span>Campus: {COLLEGES.find((c) => c.slug === selectedCollegeSlug)?.name}</span>
+            <button
+              type="button"
+              onClick={() => handleCollegeChange("all")}
+              className="text-muted-foreground hover:text-foreground text-xs ml-1 font-bold"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {active && !isCardDismissed && (
           <div className="absolute right-4 bottom-6 left-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-88 md:w-96 z-[1001] pointer-events-auto">
             <div className="relative border border-border bg-card/95 backdrop-blur-md shadow-2xl rounded-md overflow-hidden flex flex-col sm:flex-row gap-3 p-3 text-foreground">
@@ -774,6 +966,14 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
                     <MapPin className="size-3 shrink-0" />
                     <span>{[active.locality ?? active.neighborhood, active.city].filter(Boolean).join(", ")}</span>
                   </p>
+
+                  {/* Distance to Campus badge with walking route */}
+                  {activeMatch?.targetCollege && (
+                    <div className="mt-1 flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                      <GraduationCap className="size-3 shrink-0" />
+                      <span>{activeMatch.distanceStr} to {activeMatch.targetCollege.shortName} (~{activeMatch.walkingMinutes} min)</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-2.5 pt-2 border-t border-border/60 flex items-center justify-between gap-2">
