@@ -142,10 +142,13 @@ export function calculateHaversineDistance(aLat: number, aLng: number, bLat: num
 }
 
 /**
- * Estimates walking travel duration based on average mountain/city walking speed.
+ * Estimates walking travel duration based on realistic street routing
+ * circuity (1.25x road factor) and average pedestrian speed (4.5 km/h).
  */
 export function calculateWalkingMinutes(distanceKm: number): number {
-  return Math.max(distanceKm < 0.4 ? 4 : 6, Math.round(distanceKm * 12));
+  const roadKm = distanceKm * 1.25;
+  const minutes = Math.round(roadKm * 13.3);
+  return Math.max(distanceKm < 0.15 ? 2 : 3, minutes);
 }
 
 /**

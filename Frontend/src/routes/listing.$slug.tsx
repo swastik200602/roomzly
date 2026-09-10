@@ -32,6 +32,7 @@ import {
   Building2,
   KeyRound,
   LockKeyhole,
+  ExternalLink,
   type LucideIcon,
 } from "lucide-react";
 import { Suspense, lazy, useState } from "react";
@@ -445,50 +446,89 @@ function ListingPage() {
               from {p.primaryCollege.name || p.primaryCollege.shortName}
             </span>
           )}
+          {p.latitude != null && p.longitude != null && (
+            <a
+              href={
+                p.primaryCollege?.latitude != null && p.primaryCollege?.longitude != null
+                  ? `https://www.google.com/maps/dir/?api=1&origin=${p.latitude},${p.longitude}&destination=${p.primaryCollege.latitude},${p.primaryCollege.longitude}&travelmode=walking`
+                  : `https://www.google.com/maps/search/?api=1&query=${p.latitude},${p.longitude}`
+              }
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 transition-colors"
+              title="Open turn-by-turn route on Google Maps"
+            >
+              <MapPin className="size-3 text-emerald-500 shrink-0" />
+              <span>View on Google Maps</span>
+              <ExternalLink className="size-2.5 opacity-80 shrink-0" />
+            </a>
+          )}
         </div>
-        <div className="mt-6 grid gap-2 rounded-sm border border-border bg-surface p-2 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center">
-          <div className="px-2 py-1 space-y-1">
+        <div className="mt-6 flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-sm border border-border bg-surface p-3">
+          <div className="space-y-1">
             <p className="text-sm font-semibold">Interested in this property?</p>
             <p className="text-xs text-muted-foreground">Talk to the owner directly or use Roomzly chat for privacy.</p>
             {p.primaryCollege && (
-              <p className="text-xs text-muted-foreground">
-                {p.primaryCollege.shortName} is {p.primaryCollege.walkingMinutes} min away on foot or about {p.primaryCollege.drivingMinutes} min by road.
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <GraduationCap className="size-3.5 text-emerald-500 shrink-0" />
+                <span>
+                  {p.primaryCollege.shortName} is ~{p.primaryCollege.walkingMinutes} min away on foot or about {p.primaryCollege.drivingMinutes} min by road.
+                </span>
               </p>
             )}
           </div>
-          <button
-            type="button"
-            onClick={startPrivateChat}
-            disabled={threadMutation.isPending}
-            className="min-h-11 rounded-sm bg-foreground px-4 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50 inline-flex items-center justify-center gap-2"
-          >
-            <ActionButtonContent
-              pending={threadMutation.isPending}
-              idleLabel="Chat on Roomzly"
-              pendingLabel="Opening private chat"
-              icon={<MessageCircle className="size-4" />}
-            />
-          </button>
-          {whatsappContactUrl && (
-            <a
-              href={whatsappContactUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="min-h-11 rounded-sm border border-border bg-background px-4 text-sm font-semibold transition-colors hover:bg-surface-hi inline-flex items-center justify-center gap-2"
+          <div className="flex flex-wrap items-center gap-2">
+            {p.latitude != null && p.longitude != null && (
+              <a
+                href={
+                  p.primaryCollege?.latitude != null && p.primaryCollege?.longitude != null
+                    ? `https://www.google.com/maps/dir/?api=1&origin=${p.latitude},${p.longitude}&destination=${p.primaryCollege.latitude},${p.primaryCollege.longitude}&travelmode=walking`
+                    : `https://www.google.com/maps/search/?api=1&query=${p.latitude},${p.longitude}`
+                }
+                target="_blank"
+                rel="noreferrer"
+                className="min-h-11 rounded-sm border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 px-3.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 transition-colors inline-flex items-center justify-center gap-1.5"
+                title="Open walking directions on Google Maps"
+              >
+                <Navigation className="size-3.5 text-emerald-500" />
+                <span>Directions</span>
+                <ExternalLink className="size-3 opacity-60" />
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={startPrivateChat}
+              disabled={threadMutation.isPending}
+              className="min-h-11 rounded-sm bg-foreground px-4 text-xs font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90 disabled:opacity-50 inline-flex items-center justify-center gap-2"
             >
-              <WhatsAppMark />
-              WhatsApp
-            </a>
-          )}
-          {callablePhone && (
-            <a
-              href={`tel:${callablePhone}`}
-              className="min-h-11 rounded-sm border border-border bg-background px-4 text-sm font-semibold transition-colors hover:bg-surface-hi inline-flex items-center justify-center gap-2"
-            >
-              <Phone className="size-4" />
-              Call
-            </a>
-          )}
+              <ActionButtonContent
+                pending={threadMutation.isPending}
+                idleLabel="Chat on Roomzly"
+                pendingLabel="Opening private chat"
+                icon={<MessageCircle className="size-4" />}
+              />
+            </button>
+            {whatsappContactUrl && (
+              <a
+                href={whatsappContactUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="min-h-11 rounded-sm border border-border bg-background px-4 text-xs font-bold uppercase tracking-wider transition-colors hover:bg-surface-hi inline-flex items-center justify-center gap-2"
+              >
+                <WhatsAppMark />
+                WhatsApp
+              </a>
+            )}
+            {callablePhone && (
+              <a
+                href={`tel:${callablePhone}`}
+                className="min-h-11 rounded-sm border border-border bg-background px-4 text-xs font-bold uppercase tracking-wider transition-colors hover:bg-surface-hi inline-flex items-center justify-center gap-2"
+              >
+                <Phone className="size-4" />
+                Call
+              </a>
+            )}
+          </div>
         </div>
       </header>
 

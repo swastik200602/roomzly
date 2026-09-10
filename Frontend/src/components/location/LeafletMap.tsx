@@ -1,7 +1,7 @@
 import "leaflet/dist/leaflet.css";
 
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Crosshair, GraduationCap, LayoutGrid, LoaderCircle, MapPin, Navigation, Search, ShieldCheck, X } from "lucide-react";
+import { ArrowRight, Crosshair, ExternalLink, GraduationCap, LayoutGrid, LoaderCircle, MapPin, Navigation, Search, ShieldCheck, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ProgressiveImage } from "@/components/property/ProgressiveImage";
@@ -1054,14 +1054,29 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
                       </span>
                       <span className="text-[9px] text-muted-foreground ml-0.5">/mo</span>
                     </div>
-                    <Link
-                      to="/listing/$slug"
-                      params={{ slug: active.slug }}
-                      className="inline-flex items-center gap-1 bg-foreground text-background hover:bg-accent hover:text-accent-foreground px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-sm transition-colors shrink-0"
-                    >
-                      <span>View</span>
-                      <ArrowRight className="size-3" />
-                    </Link>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {activeMatch?.targetCollege && (
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&origin=${active.latitude},${active.longitude}&destination=${activeMatch.targetCollege.latitude},${activeMatch.targetCollege.longitude}&travelmode=walking`}
+                          target="_blank"
+                          rel="noreferrer"
+                          title="Open turn-by-turn route in Google Maps"
+                          className="inline-flex items-center gap-1 border border-border bg-surface hover:bg-surface-hi px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground rounded-sm transition-colors"
+                        >
+                          <MapPin className="size-3 text-emerald-500" />
+                          <span className="hidden xs:inline sm:inline">Maps</span>
+                          <ExternalLink className="size-2.5 opacity-60" />
+                        </a>
+                      )}
+                      <Link
+                        to="/listing/$slug"
+                        params={{ slug: active.slug }}
+                        className="inline-flex items-center gap-1 bg-foreground text-background hover:bg-accent hover:text-accent-foreground px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-sm transition-colors shrink-0"
+                      >
+                        <span>View</span>
+                        <ArrowRight className="size-3" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
