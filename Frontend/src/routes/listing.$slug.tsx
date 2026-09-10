@@ -448,15 +448,11 @@ function ListingPage() {
           )}
           {p.latitude != null && p.longitude != null && (
             <a
-              href={
-                p.primaryCollege?.latitude != null && p.primaryCollege?.longitude != null
-                  ? `https://www.google.com/maps/dir/?api=1&origin=${p.latitude},${p.longitude}&destination=${p.primaryCollege.latitude},${p.primaryCollege.longitude}&travelmode=walking`
-                  : `https://www.google.com/maps/search/?api=1&query=${p.latitude},${p.longitude}`
-              }
+              href={mapsUrl}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 transition-colors"
-              title="Open turn-by-turn route on Google Maps"
+              title="View room pin on Google Maps"
             >
               <MapPin className="size-3 text-emerald-500 shrink-0" />
               <span>View on Google Maps</span>
@@ -469,32 +465,37 @@ function ListingPage() {
             <p className="text-sm font-semibold">Interested in this property?</p>
             <p className="text-xs text-muted-foreground">Talk to the owner directly or use Roomzly chat for privacy.</p>
             {p.primaryCollege && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
                 <GraduationCap className="size-3.5 text-emerald-500 shrink-0" />
                 <span>
                   {p.primaryCollege.shortName} is ~{p.primaryCollege.walkingMinutes} min away on foot or about {p.primaryCollege.drivingMinutes} min by road.
                 </span>
+                {p.primaryCollege.latitude != null && p.primaryCollege.longitude != null && (
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&origin=${p.latitude},${p.longitude}&destination=${p.primaryCollege.latitude},${p.primaryCollege.longitude}&travelmode=walking`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-accent hover:underline font-semibold inline-flex items-center gap-0.5 ml-1"
+                    title="View route from room to college"
+                  >
+                    Campus walk route <ExternalLink className="size-2.5 inline opacity-75" />
+                  </a>
+                )}
               </p>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {p.latitude != null && p.longitude != null && (
-              <a
-                href={
-                  p.primaryCollege?.latitude != null && p.primaryCollege?.longitude != null
-                    ? `https://www.google.com/maps/dir/?api=1&origin=${p.latitude},${p.longitude}&destination=${p.primaryCollege.latitude},${p.primaryCollege.longitude}&travelmode=walking`
-                    : `https://www.google.com/maps/search/?api=1&query=${p.latitude},${p.longitude}`
-                }
-                target="_blank"
-                rel="noreferrer"
-                className="min-h-11 rounded-sm border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 px-3.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 transition-colors inline-flex items-center justify-center gap-1.5"
-                title="Open walking directions on Google Maps"
-              >
-                <Navigation className="size-3.5 text-emerald-500" />
-                <span>Directions</span>
-                <ExternalLink className="size-3 opacity-60" />
-              </a>
-            )}
+            <a
+              href={directionsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="min-h-11 rounded-sm border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 px-3.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 transition-colors inline-flex items-center justify-center gap-1.5"
+              title="Get directions from your current location to this room"
+            >
+              <Navigation className="size-3.5 text-emerald-500" />
+              <span>Directions</span>
+              <ExternalLink className="size-3 opacity-60" />
+            </a>
             <button
               type="button"
               onClick={startPrivateChat}
