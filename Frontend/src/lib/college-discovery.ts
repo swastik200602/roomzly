@@ -74,8 +74,8 @@ export const COLLEGES: CollegeDirectoryItem[] = [
     locality: "Shankarpur",
     city: "Dehradun",
     state: "Uttarakhand",
-    latitude: 30.3770,
-    longitude: 77.8251,
+    latitude: 30.3788,
+    longitude: 77.8248,
   },
   {
     slug: "bfit",
