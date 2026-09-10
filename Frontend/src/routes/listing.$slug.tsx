@@ -452,7 +452,7 @@ function ListingPage() {
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 transition-colors"
-              title="View room pin on Google Maps"
+              title="Open room location on Google Maps"
             >
               <MapPin className="size-3 text-emerald-500 shrink-0" />
               <span>View on Google Maps</span>
@@ -465,37 +465,28 @@ function ListingPage() {
             <p className="text-sm font-semibold">Interested in this property?</p>
             <p className="text-xs text-muted-foreground">Talk to the owner directly or use Roomzly chat for privacy.</p>
             {p.primaryCollege && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                 <GraduationCap className="size-3.5 text-emerald-500 shrink-0" />
                 <span>
                   {p.primaryCollege.shortName} is ~{p.primaryCollege.walkingMinutes} min away on foot or about {p.primaryCollege.drivingMinutes} min by road.
                 </span>
-                {p.primaryCollege.latitude != null && p.primaryCollege.longitude != null && (
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&origin=${p.latitude},${p.longitude}&destination=${p.primaryCollege.latitude},${p.primaryCollege.longitude}&travelmode=walking`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-accent hover:underline font-semibold inline-flex items-center gap-0.5 ml-1"
-                    title="View route from room to college"
-                  >
-                    Campus walk route <ExternalLink className="size-2.5 inline opacity-75" />
-                  </a>
-                )}
               </p>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <a
-              href={directionsUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="min-h-11 rounded-sm border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 px-3.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 transition-colors inline-flex items-center justify-center gap-1.5"
-              title="Get directions from your current location to this room"
-            >
-              <Navigation className="size-3.5 text-emerald-500" />
-              <span>Directions</span>
-              <ExternalLink className="size-3 opacity-60" />
-            </a>
+            {p.latitude != null && p.longitude != null && (
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="min-h-11 rounded-sm border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 px-3.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 transition-colors inline-flex items-center justify-center gap-1.5"
+                title="Get directions from your current location to this room"
+              >
+                <Navigation className="size-3.5 text-emerald-500" />
+                <span>Directions</span>
+                <ExternalLink className="size-3 opacity-60" />
+              </a>
+            )}
             <button
               type="button"
               onClick={startPrivateChat}
@@ -894,17 +885,6 @@ function ListingPage() {
                         <Navigation className="size-3.5" />
                         Get directions
                       </a>
-                      {p.primaryCollege?.latitude != null && p.primaryCollege?.longitude != null && (
-                        <a
-                          href={`https://www.google.com/maps/dir/?api=1&origin=${p.latitude},${p.longitude}&destination=${p.primaryCollege.latitude},${p.primaryCollege.longitude}&travelmode=walking`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="border border-border bg-surface hover:bg-surface-hi px-4 py-2.5 text-xs font-bold uppercase tracking-widest rounded-sm inline-flex items-center gap-2 transition-colors"
-                        >
-                          <GraduationCap className="size-3.5 text-accent" />
-                          Walk to {p.primaryCollege.shortName} ({p.primaryCollege.distanceKm < 1 ? `${Math.round(p.primaryCollege.distanceKm * 1000)} m` : `${p.primaryCollege.distanceKm} km`})
-                        </a>
-                      )}
                     </div>
                   </div>
                   <Suspense
