@@ -482,6 +482,7 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
   const [isCardDismissed, setIsCardDismissed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCollegeSlug, setSelectedCollegeSlug] = useState<string>("all");
+  const [selectedCat, setSelectedCat] = useState<string>("all");
   const [mobileTab, setMobileTab] = useState<"map" | "list">("map");
 
   const getClosestCollege = (propLat: number, propLng: number) => {
