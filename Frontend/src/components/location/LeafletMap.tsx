@@ -481,8 +481,8 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
   const [isMapReady, setIsMapReady] = useState(false);
   const [isCardDismissed, setIsCardDismissed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCat, setSelectedCat] = useState<string>("all");
   const [selectedCollegeSlug, setSelectedCollegeSlug] = useState<string>("all");
+  const [mobileTab, setMobileTab] = useState<"map" | "list">("map");
 
   const getClosestCollege = (propLat: number, propLng: number) => {
     let minDistance = Infinity;
@@ -566,6 +566,16 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
       setIsMapReady(false);
     };
   }, []);
+
+  // Ensure map tiles resize correctly when mobileTab changes
+  useEffect(() => {
+    if (mobileTab === "map" && mapRef.current) {
+      const timer = setTimeout(() => {
+        mapRef.current?.invalidateSize();
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [mobileTab]);
 
   // College Landmark Markers
   useEffect(() => {
@@ -757,246 +767,307 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
   const activeMatch = active as any;
 
   return (
-    <div className="grid min-h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(360px,440px)_1fr]">
-      <aside className="border-r border-border bg-background overflow-y-auto max-h-[48dvh] lg:max-h-[calc(100dvh-4rem)] flex flex-col">
-        {/* Sidebar Header */}
-        <div className="p-4 border-b border-border space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-mono-eyebrow">{filteredMapped.length} mapped spaces</p>
-              <h1 className="font-display text-2xl font-bold tracking-tight mt-0.5">Search by map</h1>
-            </div>
-            <Link
-              to="/explore"
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-border bg-surface hover:bg-surface-hi text-xs font-mono uppercase tracking-wider rounded-sm transition-colors text-muted-foreground hover:text-foreground"
-            >
+    <div className="relative min-h-[calc(100dvh-4rem)]">
+      {/* Floating Mobile Toggle Pill (Airbnb/Zillow Style) */}
+      <div className="lg:hidden fixed bottom-5 left-1/2 -translate-y-1/2 z-[1005] shadow-2xl pointer-events-auto">
+        <button
+          type="button"
+          onClick={() => setMobileTab(mobileTab === "map" ? "list" : "map")}
+          className="bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-2xl border border-white/20 dark:border-black/20 hover:scale-105 active:scale-95 transition-transform"
+        >
+          {mobileTab === "map" ? (
+            <>
               <LayoutGrid className="size-3.5" />
-              <span>Grid View</span>
-            </Link>
+              <span>Show List ({filteredMapped.length})</span>
+            </>
+          ) : (
+            <>
+              <MapPin className="size-3.5" />
+              <span>Show Map</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      <div className="grid min-h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(360px,440px)_1fr]">
+        {/* Sidebar */}
+        <aside
+          className={cn(
+            "border-r border-border bg-background overflow-y-auto flex flex-col",
+            "lg:max-h-[calc(100dvh-4rem)] lg:flex",
+            mobileTab === "list" ? "flex min-h-[calc(100dvh-4rem)] pb-24" : "hidden",
+          )}
+        >
+          {/* Sidebar Header */}
+          <div className="p-4 border-b border-border space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-mono-eyebrow">{filteredMapped.length} mapped spaces</p>
+                <h1 className="font-display text-2xl font-bold tracking-tight mt-0.5">Search by map</h1>
+              </div>
+              <Link
+                to="/explore"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-border bg-surface hover:bg-surface-hi text-xs font-mono uppercase tracking-wider rounded-sm transition-colors text-muted-foreground hover:text-foreground"
+              >
+                <LayoutGrid className="size-3.5" />
+                <span>Grid View</span>
+              </Link>
+            </div>
+
+            {/* College Selector Filter */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <GraduationCap className="size-3.5 text-accent" />
+                <span>Filter near Campus</span>
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedCollegeSlug}
+                  onChange={(e) => handleCollegeChange(e.target.value)}
+                  className="w-full bg-surface border border-border text-xs rounded-sm py-2 pl-3 pr-8 text-foreground focus:outline-none focus:border-accent font-medium cursor-pointer"
+                >
+                  <option value="all">🎓 All Dehradun Campuses</option>
+                  {COLLEGES.map((c) => (
+                    <option key={c.slug} value={c.slug}>
+                      🎓 {c.name} ({c.locality || c.areaName})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Quick Search */}
+            <div className="relative">
+              <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search locality or area..."
+                className="w-full pl-8 pr-7 py-2 bg-surface border border-border text-xs rounded-sm focus:outline-none focus:border-accent text-foreground placeholder:text-muted-foreground/60"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Category Filter Chips */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+              {[
+                { id: "all", label: "All" },
+                { id: "pg", label: "PG / Hostels" },
+                { id: "apartment", label: "Apartments" },
+                { id: "studio", label: "Studios" },
+              ].map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setSelectedCat(c.id)}
+                  className={cn(
+                    "px-2.5 py-1 text-[11px] font-medium rounded-full border transition-colors shrink-0",
+                    selectedCat === c.id
+                      ? "bg-foreground text-background border-foreground font-semibold"
+                      : "bg-surface border-border text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* College Selector Filter */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <GraduationCap className="size-3.5 text-accent" />
-              <span>Filter near Campus</span>
-            </label>
-            <div className="relative">
+          {/* Listings List */}
+          <div className="divide-y divide-border overflow-y-auto flex-1">
+            {filteredMapped.length === 0 && (
+              <div className="p-6 text-center text-sm text-muted-foreground space-y-2">
+                <p>No listings match your map filter.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedCat("all");
+                    setSelectedCollegeSlug("all");
+                  }}
+                  className="text-xs text-accent underline font-semibold"
+                >
+                  Reset filters
+                </button>
+              </div>
+            )}
+            {filteredMapped.map((property) => (
+              <button
+                key={property.id}
+                type="button"
+                onClick={() => {
+                  if (property.latitude != null && property.longitude != null) {
+                    highlight(property);
+                    setMobileTab("map");
+                  }
+                }}
+                className={cn(
+                  "w-full text-left p-3.5 hover:bg-surface-hi transition-colors flex items-center gap-3",
+                  active?.id === property.id && "bg-surface-hi border-l-2 border-accent",
+                )}
+              >
+                <div className="size-16 rounded-sm overflow-hidden border border-border shrink-0 bg-surface">
+                  <ProgressiveImage
+                    src={property.image || property.images?.[0]?.url || property.gallery?.[0] || ""}
+                    alt={property.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[10px] font-mono uppercase text-accent font-semibold">
+                      {property.categoryLabel || property.category}
+                    </span>
+                    {property.verified && (
+                      <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                        <ShieldCheck className="size-2.5 text-accent" /> Verified
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-semibold truncate text-foreground mt-0.5">{property.title}</p>
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">
+                    {[property.locality ?? property.neighborhood, property.city].filter(Boolean).join(", ")}
+                  </p>
+
+                  {/* College Proximity Badge */}
+                  {property.targetCollege && (
+                    <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+                      <GraduationCap className="size-3 shrink-0" />
+                      <span>{property.distanceStr} to {property.targetCollege.shortName} (~{property.walkingMinutes}m)</span>
+                    </p>
+                  )}
+
+                  <p className="font-display text-sm font-bold text-foreground mt-1">
+                    {formatCurrency(property.price)} <span className="text-[10px] font-normal text-muted-foreground">/mo</span>
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        {/* Map Section */}
+        <section
+          className={cn(
+            "relative min-h-[calc(100dvh-4rem)] lg:min-h-0",
+            mobileTab === "map" ? "block h-[calc(100dvh-4rem)]" : "hidden lg:block",
+          )}
+        >
+          <div ref={containerRef} className="absolute inset-0 bg-surface" />
+
+          {/* Mobile Top Controls Bar */}
+          <div className="lg:hidden absolute top-3 left-3 right-3 z-[1001] flex items-center gap-2">
+            <div className="flex-1 bg-background/95 backdrop-blur-md border border-border rounded-lg shadow-lg px-3 py-2 flex items-center gap-2">
+              <GraduationCap className="size-4 text-accent shrink-0" />
               <select
                 value={selectedCollegeSlug}
                 onChange={(e) => handleCollegeChange(e.target.value)}
-                className="w-full bg-surface border border-border text-xs rounded-sm py-2 pl-3 pr-8 text-foreground focus:outline-none focus:border-accent font-medium cursor-pointer"
+                className="w-full bg-transparent text-xs font-semibold text-foreground focus:outline-none cursor-pointer truncate"
               >
                 <option value="all">🎓 All Dehradun Campuses</option>
                 {COLLEGES.map((c) => (
                   <option key={c.slug} value={c.slug}>
-                    🎓 {c.name} ({c.locality || c.areaName})
+                    🎓 {c.name}
                   </option>
                 ))}
               </select>
             </div>
           </div>
 
-          {/* Quick Search */}
-          <div className="relative">
-            <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search locality or area..."
-              className="w-full pl-8 pr-7 py-2 bg-surface border border-border text-xs rounded-sm focus:outline-none focus:border-accent text-foreground placeholder:text-muted-foreground/60"
-            />
-            {searchQuery && (
+          {/* Desktop Selected Campus Floating Tag */}
+          {selectedCollegeSlug !== "all" && (
+            <div className="hidden lg:flex absolute top-4 left-4 z-[1001] bg-background/90 backdrop-blur-md border border-border px-3 py-1.5 rounded-full shadow-lg items-center gap-2 text-xs font-semibold">
+              <span className="size-2 rounded-full bg-accent animate-pulse" />
+              <span>Campus: {COLLEGES.find((c) => c.slug === selectedCollegeSlug)?.name}</span>
               <button
                 type="button"
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={() => handleCollegeChange("all")}
+                className="text-muted-foreground hover:text-foreground text-xs ml-1 font-bold"
               >
-                <X className="size-3.5" />
-              </button>
-            )}
-          </div>
-
-          {/* Category Filter Chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-            {[
-              { id: "all", label: "All" },
-              { id: "pg", label: "PG / Hostels" },
-              { id: "apartment", label: "Apartments" },
-              { id: "studio", label: "Studios" },
-            ].map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setSelectedCat(c.id)}
-                className={cn(
-                  "px-2.5 py-1 text-[11px] font-medium rounded-full border transition-colors shrink-0",
-                  selectedCat === c.id
-                    ? "bg-foreground text-background border-foreground font-semibold"
-                    : "bg-surface border-border text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Listings List */}
-        <div className="divide-y divide-border overflow-y-auto flex-1">
-          {filteredMapped.length === 0 && (
-            <div className="p-6 text-center text-sm text-muted-foreground space-y-2">
-              <p>No listings match your map filter.</p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCat("all");
-                  setSelectedCollegeSlug("all");
-                }}
-                className="text-xs text-accent underline font-semibold"
-              >
-                Reset filters
+                ✕
               </button>
             </div>
           )}
-          {filteredMapped.map((property) => (
-            <button
-              key={property.id}
-              type="button"
-              onClick={() => property.latitude != null && property.longitude != null && highlight(property)}
-              className={cn(
-                "w-full text-left p-3.5 hover:bg-surface-hi transition-colors flex items-center gap-3",
-                active?.id === property.id && "bg-surface-hi border-l-2 border-accent",
-              )}
-            >
-              <div className="size-16 rounded-sm overflow-hidden border border-border shrink-0 bg-surface">
-                <ProgressiveImage
-                  src={property.image || property.images?.[0]?.url || property.gallery?.[0] || ""}
-                  alt={property.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-1">
-                  <span className="text-[10px] font-mono uppercase text-accent font-semibold">
-                    {property.categoryLabel || property.category}
-                  </span>
-                  {property.verified && (
-                    <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
-                      <ShieldCheck className="size-2.5 text-accent" /> Verified
+
+          {/* Active Property Card — Compact horizontal layout on mobile so it never covers the map */}
+          {active && !isCardDismissed && (
+            <div className="absolute bottom-20 lg:bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:w-92 md:w-96 z-[1001] pointer-events-auto">
+              <div className="relative border border-border bg-card/95 backdrop-blur-md shadow-2xl rounded-xl overflow-hidden flex flex-row gap-3 p-2.5 sm:p-3 text-foreground items-center">
+                <button
+                  type="button"
+                  onClick={() => setIsCardDismissed(true)}
+                  className="absolute top-2 right-2 z-20 size-6 rounded-full bg-background/80 hover:bg-background text-muted-foreground hover:text-foreground grid place-items-center transition-colors shadow-sm"
+                  aria-label="Close card"
+                >
+                  <X className="size-3.5" />
+                </button>
+
+                <div className="relative size-20 sm:size-24 rounded-lg overflow-hidden border border-border/60 shrink-0 bg-surface">
+                  <ProgressiveImage
+                    src={active.image || active.images?.[0]?.url || active.gallery?.[0] || ""}
+                    alt={active.title}
+                    className="w-full h-full object-cover"
+                  />
+                  {active.verified && (
+                    <span className="absolute bottom-1 left-1 bg-accent text-accent-foreground text-[8px] font-bold px-1.5 py-0.5 rounded-[2px] flex items-center gap-0.5 shadow-sm">
+                      <ShieldCheck className="size-2" /> Verified
                     </span>
                   )}
                 </div>
-                <p className="text-sm font-semibold truncate text-foreground mt-0.5">{property.title}</p>
-                <p className="text-xs text-muted-foreground truncate mt-0.5">
-                  {[property.locality ?? property.neighborhood, property.city].filter(Boolean).join(", ")}
-                </p>
 
-                {/* College Proximity Badge */}
-                {property.targetCollege && (
-                  <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
-                    <GraduationCap className="size-3 shrink-0" />
-                    <span>{property.distanceStr} to {property.targetCollege.shortName} (~{property.walkingMinutes}m)</span>
-                  </p>
-                )}
-
-                <p className="font-display text-sm font-bold text-foreground mt-1">
-                  {formatCurrency(property.price)} <span className="text-[10px] font-normal text-muted-foreground">/mo</span>
-                </p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </aside>
-
-      <section className="relative min-h-[55dvh] lg:min-h-0">
-        <div ref={containerRef} className="absolute inset-0 bg-surface" />
-
-        {/* Selected Campus Floating Tag */}
-        {selectedCollegeSlug !== "all" && (
-          <div className="absolute top-4 left-4 z-[1001] bg-background/90 backdrop-blur-md border border-border px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2 text-xs font-semibold">
-            <span className="size-2 rounded-full bg-accent animate-pulse" />
-            <span>Campus: {COLLEGES.find((c) => c.slug === selectedCollegeSlug)?.name}</span>
-            <button
-              type="button"
-              onClick={() => handleCollegeChange("all")}
-              className="text-muted-foreground hover:text-foreground text-xs ml-1 font-bold"
-            >
-              ✕
-            </button>
-          </div>
-        )}
-
-        {active && !isCardDismissed && (
-          <div className="absolute right-4 bottom-6 left-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-88 md:w-96 z-[1001] pointer-events-auto">
-            <div className="relative border border-border bg-card/95 backdrop-blur-md shadow-2xl rounded-md overflow-hidden flex flex-col sm:flex-row gap-3 p-3 text-foreground">
-              <button
-                type="button"
-                onClick={() => setIsCardDismissed(true)}
-                className="absolute top-2 right-2 z-20 size-6 rounded-full bg-background/80 hover:bg-background text-muted-foreground hover:text-foreground grid place-items-center transition-colors shadow-sm"
-                aria-label="Close card"
-              >
-                <X className="size-3.5" />
-              </button>
-
-              <div className="relative w-full sm:w-32 h-28 sm:h-auto rounded-sm overflow-hidden border border-border/60 shrink-0 bg-surface">
-                <ProgressiveImage
-                  src={active.image || active.images?.[0]?.url || active.gallery?.[0] || ""}
-                  alt={active.title}
-                  className="w-full h-full object-cover"
-                />
-                {active.verified && (
-                  <span className="absolute bottom-1 left-1 bg-accent text-accent-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-[2px] flex items-center gap-1 shadow-sm">
-                    <ShieldCheck className="size-2.5" /> Verified
-                  </span>
-                )}
-              </div>
-
-              <div className="flex-1 flex flex-col justify-between min-w-0 pr-6 sm:pr-4">
-                <div>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold">
-                    {active.categoryLabel || active.category}
-                  </span>
-                  <p className="text-sm font-semibold truncate text-foreground mt-0.5" title={active.title}>
-                    {active.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-1">
-                    <MapPin className="size-3 shrink-0" />
-                    <span>{[active.locality ?? active.neighborhood, active.city].filter(Boolean).join(", ")}</span>
-                  </p>
-
-                  {/* Distance to Campus badge with walking route */}
-                  {activeMatch?.targetCollege && (
-                    <div className="mt-1 flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                      <GraduationCap className="size-3 shrink-0" />
-                      <span>{activeMatch.distanceStr} to {activeMatch.targetCollege.shortName} (~{activeMatch.walkingMinutes} min)</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-2.5 pt-2 border-t border-border/60 flex items-center justify-between gap-2">
+                <div className="flex-1 flex flex-col justify-between min-w-0 pr-6">
                   <div>
-                    <span className="font-display text-base font-bold text-foreground">
-                      {formatCurrency(active.price)}
+                    <span className="text-[9px] font-mono uppercase tracking-wider text-accent font-semibold">
+                      {active.categoryLabel || active.category}
                     </span>
-                    <span className="text-[10px] text-muted-foreground ml-1">/mo</span>
+                    <p className="text-xs sm:text-sm font-semibold truncate text-foreground mt-0.5" title={active.title}>
+                      {active.title}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                      <MapPin className="size-2.5 shrink-0" />
+                      <span>{[active.locality ?? active.neighborhood, active.city].filter(Boolean).join(", ")}</span>
+                    </p>
+
+                    {/* Proximity / Walking Distance badge */}
+                    {activeMatch?.targetCollege && (
+                      <div className="mt-1 flex items-center gap-1 text-[10px] sm:text-[11px] text-emerald-600 dark:text-emerald-400 font-medium truncate">
+                        <GraduationCap className="size-3 shrink-0" />
+                        <span>{activeMatch.distanceStr} to {activeMatch.targetCollege.shortName} (~{activeMatch.walkingMinutes}m)</span>
+                      </div>
+                    )}
                   </div>
-                  <Link
-                    to="/listing/$slug"
-                    params={{ slug: active.slug }}
-                    className="inline-flex items-center gap-1 bg-foreground text-background hover:bg-accent hover:text-accent-foreground px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider rounded-sm transition-colors"
-                  >
-                    <span>View</span>
-                    <ArrowRight className="size-3" />
-                  </Link>
+
+                  <div className="mt-1.5 pt-1.5 border-t border-border/60 flex items-center justify-between gap-2">
+                    <div>
+                      <span className="font-display text-sm sm:text-base font-bold text-foreground">
+                        {formatCurrency(active.price)}
+                      </span>
+                      <span className="text-[9px] text-muted-foreground ml-0.5">/mo</span>
+                    </div>
+                    <Link
+                      to="/listing/$slug"
+                      params={{ slug: active.slug }}
+                      className="inline-flex items-center gap-1 bg-foreground text-background hover:bg-accent hover:text-accent-foreground px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-sm transition-colors shrink-0"
+                    >
+                      <span>View</span>
+                      <ArrowRight className="size-3" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
