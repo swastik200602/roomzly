@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ProgressiveImage } from "@/components/property/ProgressiveImage";
 import { COLLEGES, calculateHaversineDistance, calculateWalkingMinutes } from "@/lib/college-discovery";
+import { fetchWalkingRoute, type WalkingRouteResult } from "@/lib/routing";
 import { formatCurrency } from "@/lib/currency";
 import type { Property, PropertyCollegeMatch } from "@/lib/properties";
 import { cn } from "@/lib/utils";
@@ -428,9 +429,9 @@ export function PropertyLocationMap({
             ],
             {
               color: "#2563eb",
-              weight: 3,
+              weight: 3.5,
               dashArray: "6, 8",
-              opacity: 0.85,
+              opacity: 0.9,
             },
           )
           .addTo(map);
@@ -449,6 +450,17 @@ export function PropertyLocationMap({
           [cLat, cLng],
         ]);
         map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+
+        // Asynchronously upgrade to actual road walking route
+        fetchWalkingRoute(latitude, longitude, cLat, cLng).then((route) => {
+          if (cancelled || !route || route.coordinates.length < 2) return;
+          polyline.setLatLngs(route.coordinates);
+          polyline.setStyle({ color: "#2563eb", weight: 4, dashArray: "4, 6" });
+          polyline.setTooltipContent(
+            `🎓 ${primaryCollege.shortName}: ${route.distanceFormatted} road walk • ${route.durationFormatted}`,
+          );
+          map.fitBounds(leaflet.latLngBounds(route.coordinates), { padding: [50, 50], maxZoom: 16 });
+        });
       }
     });
     return () => {
@@ -484,6 +496,7 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
   const [selectedCollegeSlug, setSelectedCollegeSlug] = useState<string>("all");
   const [selectedCat, setSelectedCat] = useState<string>("all");
   const [mobileTab, setMobileTab] = useState<"map" | "list">("map");
+  const [liveRoute, setLiveRoute] = useState<WalkingRouteResult | null>(null);
 
   const getClosestCollege = (propLat: number, propLng: number) => {
     let minDistance = Infinity;
@@ -692,7 +705,10 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
     const walkMin = calculateWalkingMinutes(distKm);
     const distStr = distKm < 1 ? `${Math.round(distKm * 1000)} m` : `${distKm} km`;
 
-    // Draw dashed walking polyline
+    let isSubscribed = true;
+    setLiveRoute(null);
+
+    // Draw initial dashed walking line
     const polyline = (leaflet as any).polyline(
       [
         [active.latitude, active.longitude],
@@ -708,30 +724,50 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
 
     polylineRef.current = polyline;
 
-    // Midpoint walking badge marker
-    const midLat = (active.latitude + targetCollege.latitude) / 2;
-    const midLng = (active.longitude + targetCollege.longitude) / 2;
-
-    const badgeHtml = `
-      <div style="background:#0f172a;color:#ffffff;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;box-shadow:0 4px 12px rgba(0,0,0,0.35);border:1px solid #3b82f6;white-space:nowrap;transform:translate(-50%, -50%);font-family:system-ui,-apple-system,sans-serif;">
-        <span>🚶 ${distStr}</span>
-        <span style="color:#93c5fd;font-weight:500;">(~${walkMin}m)</span>
+    // Midpoint walking badge marker helper
+    const renderBadgeHtml = (distanceText: string, durationText: string, isRealRoad = false) => `
+      <div style="background:#0f172a;color:#ffffff;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;box-shadow:0 4px 12px rgba(0,0,0,0.35);border:1px solid ${isRealRoad ? "#10b981" : "#3b82f6"};white-space:nowrap;transform:translate(-50%, -50%);font-family:system-ui,-apple-system,sans-serif;">
+        <span>🚶 ${distanceText}</span>
+        <span style="color:${isRealRoad ? "#6ee7b7" : "#93c5fd"};font-weight:500;">(${durationText})</span>
       </div>
     `;
+
+    const midLat = (active.latitude + targetCollege.latitude) / 2;
+    const midLng = (active.longitude + targetCollege.longitude) / 2;
 
     const badgeMarker = leaflet.marker([midLat, midLng], {
       icon: leaflet.divIcon({
         className: "walking-route-badge",
-        html: badgeHtml,
-        iconSize: [110, 24],
-        iconAnchor: [55, 12],
+        html: renderBadgeHtml(distStr, `~${walkMin}m`),
+        iconSize: [120, 24],
+        iconAnchor: [60, 12],
       }),
       zIndexOffset: 950,
     }).addTo(map);
 
     routeBadgeMarkerRef.current = badgeMarker;
 
+    // Fetch real road route asynchronously from OSRM
+    fetchWalkingRoute(active.latitude, active.longitude, targetCollege.latitude, targetCollege.longitude).then((route) => {
+      if (!isSubscribed || !route || route.coordinates.length < 2) return;
+      setLiveRoute(route);
+      polyline.setLatLngs(route.coordinates);
+      polyline.setStyle({ color: "#2563eb", weight: 4, dashArray: "3, 5" });
+
+      const roadMid = route.coordinates[Math.floor(route.coordinates.length / 2)];
+      badgeMarker.setLatLng(roadMid);
+      badgeMarker.setIcon(
+        leaflet.divIcon({
+          className: "walking-route-badge",
+          html: renderBadgeHtml(route.distanceFormatted, route.durationFormatted, true),
+          iconSize: [120, 24],
+          iconAnchor: [60, 12],
+        }),
+      );
+    });
+
     return () => {
+      isSubscribed = false;
       polyline.remove();
       badgeMarker.remove();
     };
@@ -1042,7 +1078,9 @@ export function SearchMapView({ properties }: { properties: Property[] }) {
                     {activeMatch?.targetCollege && (
                       <div className="mt-1 flex items-center gap-1 text-[10px] sm:text-[11px] text-emerald-600 dark:text-emerald-400 font-medium truncate">
                         <GraduationCap className="size-3 shrink-0" />
-                        <span>{activeMatch.distanceStr} to {activeMatch.targetCollege.shortName} (~{activeMatch.walkingMinutes}m)</span>
+                        <span>
+                          {liveRoute ? liveRoute.distanceFormatted : activeMatch.distanceStr} to {activeMatch.targetCollege.shortName} ({liveRoute ? liveRoute.durationFormatted : `~${activeMatch.walkingMinutes}m`})
+                        </span>
                       </div>
                     )}
                   </div>
